@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>青岛3日游·绝美山海交互攻略</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f3f9fc;
+        }
+        .bg-sea-gradient {
+            background: linear-gradient(135deg, #0a3d62 0%, #1e3799 50%, #0c2461 100%);
+        }
+        .day-active {
+            background-color: #1e3799;
+            color: white;
+            box-shadow: 0 8px 20px rgba(30, 55, 153, 0.4);
+            transform: translateY(-3px);
+        }
+        .day-inactive {
+            background-color: white;
+            color: #2d3748;
+            border: 2px solid #e2e8f0;
+        }
+        .day-inactive:hover {
+            border-color: #1e3799;
+            color: #1e3799;
+        }
+        /* Custom map pin style */
+        .custom-div-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1e3799;
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #edf2f7;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+    </style>
+</head>
+<body class="text-slate-900 antialiased min-h-screen pb-12">
+
+    <!-- Top Banner -->
+    <div class="bg-sea-gradient text-white py-14 px-6 relative overflow-hidden shadow-lg">
+        <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <span class="bg-amber-400 text-slate-950 text-sm font-black px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 inline-block">Qingdao Travel Guide</span>
+            <h1 class="text-4xl md:text-6xl font-black mb-4 tracking-tight">青岛 · 绝美山海三日游</h1>
+            <p class="text-base md:text-xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
+                「自西向东、穿越百年、落日归山海」 视频精华无损提取，带你避开人流直奔极致机位！
+            </p>
+        </div>
+        <!-- Wave decoration -->
+        <div class="absolute bottom-0 left-0 right-0">
+            <svg viewBox="0 0 1440 120" fill="none" class="w-full h-8 text-[#f3f9fc] preserve-3d">
+                <path d="M0,32L120,42.7C240,53,480,75,720,74.7C960,75,1200,53,1320,42.7L1440,32L1440,120L1320,120C1200,120,960,120,720,120C480,120,240,120,120,120L0,120Z" fill="currentColor"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="max-w-6xl mx-auto px-4 mt-8">
+        
+        <!-- Day Selector Tabs (Extra Large for Mobile touch targets) -->
+        <div class="grid grid-cols-3 gap-3 md:gap-6 mb-8">
+            <button onclick="switchDay(1)" id="btn-day-1" class="day-active py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center min-h-[80px]">
+                <span class="text-xs md:text-sm opacity-85 uppercase tracking-wider">Day 01</span>
+                <span class="text-lg md:text-2xl mt-1">绝美海岸线</span>
+            </button>
+            <button onclick="switchDay(2)" id="btn-day-2" class="day-inactive py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center min-h-[80px]">
+                <span class="text-xs md:text-sm opacity-85 uppercase tracking-wider">Day 02</span>
+                <span class="text-lg md:text-2xl mt-1">百年老城区</span>
+            </button>
+            <button onclick="switchDay(3)" id="btn-day-3" class="day-inactive py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center min-h-[80px]">
+                <span class="text-xs md:text-sm opacity-85 uppercase tracking-wider">Day 03</span>
+                <span class="text-lg md:text-2xl mt-1">崂山全景线</span>
+            </button>
+        </div>
+
+        <!-- Guide Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Timeline (Left Column) - 7 Cols -->
+            <div class="lg:col-span-7 bg-white rounded-3xl p-6 md:p-10 shadow-xl border border-slate-100">
+                
+                <!-- Day 1 Content -->
+                <div id="day-1-content" class="day-panel">
+                    <div class="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100">
+                        <h2 class="text-2xl md:text-3xl font-black text-slate-900 flex items-center">
+                            <span class="w-2.5 h-8 bg-blue-600 rounded-full mr-3"></span>第一天：自西向东慢慢逛
+                        </h2>
+                        <span class="text-base bg-blue-50 text-blue-700 font-extrabold px-4 py-1.5 rounded-full">海岸精华线</span>
+                    </div>
+
+                    <!-- Timeline Item 1 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-blue-300 last:border-0">
+                        <!-- Icon Circle -->
+                        <div class="absolute -left-4 top-1 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md shadow-blue-200">
+                            上
+                        </div>
+                        <div class="mb-2 text-sm font-black text-blue-600 tracking-wider">上午 · 海岸地标巡礼</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">经典起点与海风地标</h3>
+                        <div class="space-y-6">
+                            <!-- Spot 1 -->
+                            <div class="bg-slate-50 p-5 rounded-2xl relative group hover:bg-blue-50/40 transition-colors border border-slate-100">
+                                <span class="absolute top-4 right-4 text-emerald-700 text-xs md:text-sm bg-emerald-50 px-3 py-1 rounded-full font-black">100%同框机位</span>
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">1. 栈桥 (青岛地标象征)</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">青岛必打卡首站！极具代表性的百年海上栈桥。</p>
+                                <div class="mt-3 text-sm md:text-base bg-amber-50 text-amber-900 p-4 rounded-xl border border-amber-200/60 leading-relaxed">
+                                    <strong>💡 独家避坑机位：</strong>最美的位置根本不在栈桥桥身上，请前往它西侧的<strong>「李恩农公园」</strong>！只有在这里，才能完美拍到栈桥回澜阁与红瓦、绿树、碧海、蓝天同框的神级构图。
+                                </div>
+                            </div>
+                            <!-- Spot 2 -->
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
+                                <span class="text-xs md:text-sm text-blue-700 bg-blue-50 px-3 py-1 rounded-md font-black inline-block mb-2">需提早预约</span>
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">2. 海军博物馆</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">我国首屈一指的海军主题博物馆。在海上展区，我国的<strong>「第一艘驱逐舰」</strong>和<strong>「第一艘核潜艇」</strong>都真实停泊在此，现场极其雄伟震撼！</p>
+                                <p class="text-sm text-rose-600 mt-2 font-black">⚠️ 避坑提醒：去之前务必提前在微信公众号预约，现场无法临时进！</p>
+                            </div>
+                            <!-- Spot 3 -->
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">3. 小青岛</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">就在海博旁边，是一座非常秀美清幽的琴形海岛。岛上的白色灯塔、环岛木栈道和琴女雕像极具浪漫色彩，真是“一步一景，怎么拍都好看”。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 2 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-blue-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md shadow-amber-200">
+                            中
+                        </div>
+                        <div class="mb-2 text-sm font-black text-amber-600 tracking-wider">中午 · 360°云端瞰海</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">高空无死角，超高性价比自助</h3>
+                        <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-200/70">
+                            <h4 class="font-extrabold text-lg md:text-xl text-amber-950 flex items-center">
+                                🏢 汇泉王朝大饭店·旋转餐厅
+                            </h4>
+                            <p class="text-base text-slate-800 mt-2 leading-relaxed">视频强烈安利的就餐位！不用爬山受累，不用人挤人。坐在舒适旋转餐厅里，一边享受美食，一边俯瞰第一海水浴场和“红瓦绿树，碧海蓝天”的无死角画卷。</p>
+                            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm md:text-base">
+                                <div class="bg-white/80 p-3 rounded-xl border border-amber-100">💰 <strong>人均价格：</strong>仅需100多元（五星级品质）</div>
+                                <div class="bg-white/80 p-3 rounded-xl border border-amber-100">💡 <strong>提示：</strong>一定提前预约靠窗座位！</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 3 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-blue-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                            下
+                        </div>
+                        <div class="mb-2 text-sm font-black text-emerald-600 tracking-wider">下午 · 浪漫万国建筑群</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">异国风情街道与慢步轻徒步</h3>
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">4. 八大关</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">极富浪漫气息的“万国建筑博览会”，无数幢风格各异的百年欧式老别墅掩映在红枫与雪松之间，随手一拍就是假装在欧洲的质感大片。</p>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
+                                <span class="text-xs md:text-sm text-rose-700 bg-rose-50 px-3 py-1 rounded-full font-black inline-block mb-2">小众私藏宝地</span>
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">5. 海边木栈道 ➡️ 第三海水浴场</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">顺着八大关旁边的海边木栈道，一路吹着温润的海风、踩着涛声散步，直达第三海水浴场。</p>
+                                <div class="mt-3 text-sm md:text-base bg-rose-50/40 text-rose-950 p-4 rounded-xl border border-rose-200/60 leading-relaxed">
+                                    <strong>☕ 途中秘境强推：【彼岸咖啡】</strong>。这也是博主私藏的心头好。人少极清静，点一杯咖啡面向浩瀚黄海，听着海浪，吹吹海风，治愈感直接拉满！
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 4 -->
+                    <div class="relative pl-10 pb-4 border-l-2 border-dashed border-blue-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-indigo-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                            晚
+                        </div>
+                        <div class="mb-2 text-sm font-black text-indigo-600 tracking-wider">晚上 · 霓虹巨幕与本地烟火</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">震憾楼体秀与正宗脂渣炉包</h3>
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">看点：第三海水浴场灯光秀</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">这里是欣赏青岛东部CBD浮山湾摩天大楼灯光秀的<strong>「全场最佳观测角度」</strong>。看着流光溢彩的炫目动画倒映在海面上，极为震憾。</p>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
+                                <span class="text-xs md:text-sm text-amber-700 bg-amber-50 px-2.5 py-1 rounded font-black inline-block mb-2">青岛特色老字号</span>
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">美食一：鸿盛泰炉包</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">看完秀立刻去吃！必点他们家的<strong>【脂渣口味】</strong>炉包。外底面极其酥脆，咬一口浓郁油脂爆汁，绝对是原汁原味的老青岛印记。</p>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
+                                <span class="text-xs md:text-sm text-blue-700 bg-blue-50 px-2.5 py-1 rounded font-black inline-block mb-2">绝佳夜市</span>
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">美食二：台东步行街小吃街</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">青岛夜生活的人气顶流。来上一袋本地人最爱、装在塑料袋里<strong>「论斤称的现打青岛啤酒原浆（或纯生）」</strong>！百香果、海盐、荔枝果味精酿也超级好喝，清爽解腻极了！</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day 2 Content -->
+                <div id="day-2-content" class="day-panel hidden">
+                    <div class="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100">
+                        <h2 class="text-2xl md:text-3xl font-black text-slate-900 flex items-center">
+                            <span class="w-2.5 h-8 bg-indigo-600 rounded-full mr-3"></span>第二天：慢调百年老城区
+                        </h2>
+                        <span class="text-base bg-indigo-50 text-indigo-700 font-extrabold px-4 py-1.5 rounded-full">人文底蕴线</span>
+                    </div>
+
+                    <!-- Timeline Item 1 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-indigo-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                            上
+                        </div>
+                        <div class="mb-2 text-sm font-black text-indigo-600 tracking-wider">上午 · 宁静老街与大片红墙</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">避开嘈杂人群，私享神级人文摄影位</h3>
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">1. 金口路老街慢漫逛</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">从金口一路开始，踏着蜿蜒曲折、碎石漫漫的老马路向上走。路边每一座镶着黑底历史牌匾的旧别墅，都在诉说老青岛的百年沧桑，幽静得甚至能听到头顶信鸽扇动翅膀的声音。</p>
+                            </div>
+                            <!-- Counter-Intuitive Hack -->
+                            <div class="bg-rose-50/50 p-5 rounded-2xl border-2 border-rose-200/80 relative">
+                                <span class="absolute top-4 right-4 text-rose-700 text-xs md:text-sm bg-rose-50 px-3 py-1 rounded-full font-black">独家避坑良心建议</span>
+                                <h4 class="font-black text-lg md:text-xl text-rose-950 flex items-center">
+                                    ❌ 大学路网红红墙 ➡️ 🌟 青岛市美术馆
+                                </h4>
+                                <p class="text-base text-slate-800 mt-3 leading-relaxed"><strong>视频良心秘籍：</strong>走到鱼山路和大学路交叉口，千万千万别在那里和成百上千的人排队挤红墙！直接拐个弯，进旁边的<strong>「青岛市美术馆」</strong>。</p>
+                                <ul class="list-disc list-inside text-sm md:text-base text-slate-700 mt-3 space-y-2 font-medium">
+                                    <li>免预约，免门票，大方直接进！</li>
+                                    <li>经典的罗马红墙配上参天法桐的光影，以及纯木质结构的怀旧主楼。</li>
+                                    <li>极其安静完全没人，成片率和空间质感<strong>比去网红墙拍好上10倍</strong>。</li>
+                                    <li>里面还能买到极其别致精美、富有深厚青岛人文底蕴的文创伴手礼。</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">2. 龙江路漫画墙</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（离美术馆仅200米）随处可见手绘宫崎骏龙猫、马里奥、皮卡丘等满墙巨幅漫画，满街都洋溢着日系治愈、清亮明媚的文艺和元气风。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 2 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-indigo-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md shadow-amber-200">
+                            中
+                        </div>
+                        <div class="mb-2 text-sm font-black text-amber-600 tracking-wider">中午 · 德式古堡与爆汁火烧</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">最具代表性德式建筑与街巷小吃</h3>
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
+                                <span class="text-xs md:text-sm text-blue-700 bg-blue-50 px-2.5 py-1 rounded font-black">门票 ¥20</span>
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900 mt-2">3. 德国总督楼旧址 (迎宾馆)</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（步行300米即达）青岛德式城堡旧址中最富丽堂皇、最具有代表性的一座。里面可以看到百年前珍贵的水晶大吊灯、象牙材质钢琴、复古雕花大壁炉，令人叹为观止。属于**青岛必看古迹**。</p>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">4. 江苏路基督教堂</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（前行300米即至）黄石粗犷砌筑配上别致的绿顶，宛若安徒生笔下的北欧神话建筑。巨型钟楼机械时钟至今运转了上百年，分秒不差。</p>
+                            </div>
+                            <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-200/70">
+                                <span class="text-xs md:text-sm text-amber-800 bg-amber-100 px-3 py-1 rounded-full font-black">本地人吃货神店</span>
+                                <h4 class="font-extrabold text-lg md:text-xl text-amber-950 mt-2">
+                                    🥟 午餐力荐：【小林媛烤肉火烧】
+                                </h4>
+                                <p class="text-base text-slate-800 mt-2 leading-relaxed">藏在教堂不远处的居民街角。他们家的<strong>【烤肉火烧】</strong>外皮金黄酥脆如纸，肉馅饱满。一口咬下去，酥皮碎裂在口中，伴随着滚烫鲜美的汁水瞬间爆出！再来一碗全家福馄饨，这是老城区最勾魂的地道家常味道。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 3 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-indigo-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                            下
+                        </div>
+                        <div class="mb-2 text-sm font-black text-emerald-600 tracking-wider">下午 · 极佳登高点与老里院</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">长焦镜头下的“绿野仙踪”与老宅门院</h3>
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">5. 观象山历史街区 ➡️ 「望火楼」</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（步行约500米）徐徐步入充满生活气息的观象一路。先打卡经典浪漫的斜坡转角楼，再欣赏饱含历史厚重风霜的标志性圆形德式建筑——<strong>【望火楼】</strong>，这里深受各大电影剧组的青睐。</p>
+                            </div>
+                            
+                            <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-200/70">
+                                <span class="text-xs md:text-sm text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-black">绝对私藏：小众海景山头</span>
+                                <h4 class="font-extrabold text-lg md:text-xl text-emerald-950 mt-2">6. 观海山公园</h4>
+                                <p class="text-base text-slate-800 mt-2 leading-relaxed">沿着平原路和观海二路一路上坡。这是个极少有外地人踏足的静谧山头。在此登顶俯瞰，视野豁然开朗，可以无死角俯拍栈桥、天主教堂以及整片老城区的震撼壮丽全貌。</p>
+                                <p class="text-sm text-emerald-900 mt-2 font-black">📸 摄影Tips：一定记得把手机或相机焦距拉到【长焦焦段】（3x或5x以上），绝对能拍出如童话梦境般空灵迷蒙的绝美青岛！</p>
+                            </div>
+
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">7. 黄岛路老里院 ➡️ 大鲍岛休闲街区</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（步行下山300米）穿进深邃斑驳的黄岛路。这里拥有12个至今保存极好的经典青岛“里院”民居群落，是百年市井的根基所在。现在与修缮一新的大鲍岛街区完美交融，走走逛逛，感受最地道的人间烟火。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 4 -->
+                    <div class="relative pl-10 pb-4 border-l-2 border-dashed border-indigo-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-indigo-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                            晚
+                        </div>
+                        <div class="mb-2 text-sm font-black text-indigo-600 tracking-wider">晚上 · 惊艳鲁家本帮菜</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">陪伴两代老青岛长大的金牌菜馆</h3>
+                        <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-200/70">
+                            <h4 class="font-black text-lg md:text-xl text-indigo-950">
+                                🍽️ 晚餐力荐：【什么餐馆】
+                            </h4>
+                            <p class="text-base text-slate-800 mt-2 leading-relaxed">店名就叫《什么餐馆》，是深藏不露的殿堂级青岛家常鲁菜老店。盲点不踩雷：</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm md:text-base mt-3">
+                                <div class="bg-white/90 p-3 rounded-xl border border-indigo-100">🍲 <strong>海肠捞饭 / 鲍鱼捞饭</strong> (米饭吸满浓稠芡汁，鲜到灵魂颤抖)</div>
+                                <div class="bg-white/90 p-3 rounded-xl border border-indigo-100">🐟 <strong>蒜香鲶鱼 / 辣大蛤</strong> (鲶鱼肉嫩无刺，香辣过瘾，下酒一绝)</div>
+                            </div>
+                            <p class="text-sm text-indigo-900 mt-3 font-black">💡 评价：闭眼点，道道绝，百分之百的老字号硬实力！</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day 3 Content -->
+                <div id="day-3-content" class="day-panel hidden">
+                    <div class="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100">
+                        <h2 class="text-2xl md:text-3xl font-black text-slate-900 flex items-center">
+                            <span class="w-2.5 h-8 bg-emerald-600 rounded-full mr-3"></span>第三天：崂山山海全景线
+                        </h2>
+                        <span class="text-base bg-emerald-50 text-emerald-700 font-extrabold px-4 py-1.5 rounded-full">包车尊享线</span>
+                    </div>
+
+                    <!-- Important Prep Banner -->
+                    <div class="bg-amber-50 text-amber-950 p-5 rounded-2xl mb-8 border border-amber-200 flex items-start gap-4 shadow-sm">
+                        <span class="text-3xl">🚗</span>
+                        <div class="text-sm md:text-base leading-relaxed">
+                            <h4 class="font-black text-base md:text-lg">崂山极舒适神级玩法：强烈要求「包车」！</h4>
+                            <p class="text-slate-800 mt-1">崂山景区面积大、排队换乘折腾。强烈建议包车出行！不仅能做到【司机随时就近停车，您下车沿海滨步道慢慢拍照，走累了打个电话司机立刻开到你面前接上】，这才是旅游，千万不要图省小钱而遭罪排长队！</p>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 1 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-emerald-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                            晨
+                        </div>
+                        <div class="mb-2 text-sm font-black text-blue-600 tracking-wider">清晨 · 海上朝阳</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">最美海岸线的破晓晨光</h3>
+                        <div class="bg-slate-50 p-5 rounded-2xl hover:bg-emerald-50/40 transition-colors border border-slate-100">
+                            <h4 class="font-extrabold text-lg md:text-xl text-slate-900">1. 石老人沙滩「如是书店/咖啡」</h4>
+                            <p class="text-base text-slate-700 mt-2 leading-relaxed">清晨包车先到这里。坐在极有格调的海边大落地窗前，或者直接踩在细腻的沙滩上，静静守候海平线上冉冉升起、霞光万道的绝美日出。</p>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 2 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-emerald-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md shadow-amber-200">
+                            上
+                        </div>
+                        <div class="mb-2 text-sm font-black text-amber-600 tracking-wider">上午 · 凌驾青云俯瞰黄海</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">极陡峭险峰与洞穴密道</h3>
+                        <div class="bg-slate-50 p-5 rounded-2xl hover:bg-emerald-50/40 transition-colors border border-slate-100">
+                            <h4 class="font-extrabold text-lg md:text-xl text-slate-900">2. 仰口游览区 (推荐：仰口进，太清出)</h4>
+                            <p class="text-base text-slate-700 mt-2 leading-relaxed">乘坐缆车索道轻松至半山腰。接着，亲自挑战攀爬奇绝怪异的<strong>【觅天洞】</strong>，登顶极具雄伟之气的<strong>【寿字碑】</strong>。当踏上山顶最高观景台的一瞬，无垠翠蓝的黄海巨幕、弧形优美的仰口沙滩和沿海静谧小渔村尽收眼底，视野极其震撼，堪称无敌！</p>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 3 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-emerald-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                            中
+                        </div>
+                        <div class="mb-2 text-sm font-black text-emerald-600 tracking-wider">中午 · 崂山山海农家宴</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">最接地气的地道农家野味与海味</h3>
+                        <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-200/70">
+                            <span class="text-xs md:text-sm text-amber-800 bg-amber-100 px-3 py-1 rounded-full font-black">来崂山必点招牌</span>
+                            <h4 class="font-extrabold text-lg md:text-xl text-amber-950 mt-2">
+                                🥟 午餐推荐：崂山大姨「地瓜面包子」
+                            </h4>
+                            <p class="text-base text-slate-800 mt-2 leading-relaxed">下山直接品尝特色！黑亮筋道、略带回甘的地瓜面里，包着崂山采摘的鲜嫩山野菜与肥美多汁的野生大蛤蜊肉，健康鲜美无比！再配上一大盆热乎乎、飘着蛋花的<strong>【海鲜疙瘩汤】</strong>，真的是山海融合的鲜极滋味！</p>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 4 -->
+                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-emerald-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-teal-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                            下
+                        </div>
+                        <div class="mb-2 text-sm font-black text-teal-600 tracking-wider">下午 · 环海仙境与道观祖庭</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">漫山茶园、千年银杏、最美环海公路</h3>
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-emerald-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">3. 自驾最美环海公路 (往垭口方向)</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">一路饱览漫山遍野的绿油油茶园、辽阔无边的大海与梦幻般的红瓦渔村。途中司机可以停下来，让您随时漫游、打卡<strong>【雕龙嘴】</strong>、<strong>【华严寺(梵岭前)】</strong>、以及红瓦红顶的<strong>【青山渔村】</strong>等绝美国画级机位。</p>
+                                <div class="mt-3 text-sm md:text-base bg-emerald-50 text-emerald-950 p-4 rounded-xl border border-emerald-100 leading-relaxed">
+                                    <strong>🍵 闲适体验：</strong>一定要找个沿崖的海景茶园，面对一望无际的万顷碧波，哈一杯甘甜回甘、香气高雅的<strong>【崂山绿茶】</strong>，这就是真正的向往的生活。
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-emerald-50/40 transition-colors border border-slate-100">
+                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">4. 太清宫游览区 ➡️ 沿木栈道至八水河</h4>
+                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（过垭口后步行30分钟）漫步在有着2000多年历史的中国道教圣地“太清宫”。观赏里面的龙头古树、参天银杏与大老子雕像。随后沿着秀美的太清海滨木栈道一路漫游，直达壮丽的<strong>【八水河】</strong>。</p>
+                                <p class="text-sm md:text-base text-rose-700 font-black mt-2">🌟 崂山最最华丽的“山海精华路段”：一侧是连绵雄峻的巍巍青山，一侧是辽阔无垠的壮丽黄海。古诗里的“落日归山海”，完美的具象化场景就在这展现！</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 5 -->
+                    <div class="relative pl-10 pb-4 border-l-2 border-dashed border-emerald-300 last:border-0">
+                        <div class="absolute -left-4 top-1 bg-indigo-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
+                            晚
+                        </div>
+                        <div class="mb-2 text-sm font-black text-indigo-600 tracking-wider">晚上 · “哈啤酒，吃蛤蜊”圆满收官</div>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">痛快买海鲜到老啤酒屋加工，喝个过瘾</h3>
+                        <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-200/70">
+                            <h4 class="font-extrabold text-lg md:text-xl text-indigo-950 flex items-center">
+                                🦞 晚餐力推：埠西海鲜市场 + 啤酒屋加工
+                            </h4>
+                            <p class="text-base text-slate-800 mt-2 leading-relaxed">下山后，让包车司机一脚油门直奔全城最火的<strong>「埠西海鲜市场」</strong>。进去自己挑选生猛的大螃蟹、巨肥的生蚝、活蹦乱跳的皮皮虾（大虾）！直接拎着鲜活的海鲜，送到旁边相连的老青岛啤酒屋让老板现做加工。</p>
+                            <p class="text-sm md:text-base text-indigo-950 mt-3 font-black bg-white p-3 rounded-xl border border-indigo-100">
+                                🍺 正宗吃法：现煮热气腾腾的海鲜大餐 + 点一扎新鲜出炉、带着泡沫的**「一厂青岛生啤酒/原浆啤酒」**！大口吃海鲜，大口哈青啤，给这趟惊艳完美的青岛之行，画上一个最痛快、最酣畅淋漓的句号！
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Sidebar Info (Right Column) - 5 Cols -->
+            <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-6">
+                
+                <!-- Leaflet Real Interactive Map -->
+                <div class="bg-white rounded-3xl p-5 shadow-xl border border-slate-100">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg md:text-xl font-black text-slate-900 flex items-center">
+                            🗺️ 青岛真实轨迹地图
+                        </h3>
+                        <span class="text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full font-bold">自适应联动</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">切换天数，地图会自动定位，绘制当天视频提及景点的真实路线和坐标点。</p>
+                    
+                    <!-- Leaflet Container -->
+                    <div id="map" class="h-64 md:h-96 w-full rounded-2xl shadow-inner relative z-10 border border-slate-200"></div>
+                </div>
+
+                <!-- Interactive Checklist (Extra large for Mobile touch targets) -->
+                <div class="bg-white rounded-3xl p-5 shadow-xl border border-slate-100">
+                    <h3 class="text-lg md:text-xl font-black text-slate-900 mb-2 flex items-center justify-between">
+                        <span>🎒 行程打卡单</span>
+                        <span id="checklist-progress" class="text-xs text-blue-700 bg-blue-50 px-3 py-1 rounded-full font-black">0% 已打卡</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-4">去到一个景点就在这勾选，数据自动保存在本地，不怕丢哦！</p>
+                    
+                    <div id="checklist-items" class="space-y-3.5 max-h-[22rem] overflow-y-auto pr-1">
+                        <!-- Dynamic Checklists go here via JS -->
+                    </div>
+                </div>
+
+                <!-- Video Secret Summary -->
+                <div class="bg-gradient-to-br from-indigo-950 to-blue-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">🌊</div>
+                    <h3 class="text-lg md:text-xl font-black mb-4 flex items-center relative z-10 text-amber-300">
+                        ⭐ 视频独家秘籍无损汇总
+                    </h3>
+                    <ul class="space-y-4 text-sm md:text-base text-blue-100 font-light relative z-10">
+                        <li class="flex items-start gap-2.5">
+                            <span class="text-amber-400 font-black">📍</span>
+                            <span><strong>栈桥神级视角：</strong>必须去它西侧的“李恩农公园”拍，红瓦绿树碧海蓝天完美同框！</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="text-amber-400 font-black">📍</span>
+                            <span><strong>拒绝红墙人挤人：</strong>直接进大学路旁的“青岛市美术馆”，光影、罗马红墙好拍10倍，清幽无人！</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="text-amber-400 font-black">📍</span>
+                            <span><strong>观海山大片：</strong>不要去网红大马路排队，上观海山公园，调到长焦镜头，拍出仙境里的圣弥额尔大教堂！</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="text-amber-400 font-black">📍</span>
+                            <span><strong>崂山包车：</strong>一定要包车玩！沿栈道漫步赏落日归山海，累了随时上车直接走，不走回头路！</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Leaflet JS CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Real Coordinates for the travel spots in Qingdao
+        const spotsData = {
+            1: [
+                { id: "s1_1", name: "1. 栈桥（看红瓦绿树）", lat: 36.0583, lng: 120.3188, note: "去西侧李恩农公园拍" },
+                { id: "s1_2", name: "2. 海军博物馆", lat: 36.0545, lng: 120.3228, note: "首艘驱逐舰和核潜艇" },
+                { id: "s1_3", name: "3. 小青岛", lat: 36.0514, lng: 120.3204, note: "环岛海风木栈道" },
+                { id: "s1_4", name: "4. 旋转餐厅 (汇泉王朝)", lat: 36.0538, lng: 120.3440, note: "高空俯瞰红瓦绿树" },
+                { id: "s1_5", name: "5. 八大关别墅群", lat: 36.0541, lng: 120.3547, note: "欧式万国老别墅区" },
+                { id: "s1_6", name: "6. 海边木栈道/彼岸咖啡", lat: 36.0515, lng: 120.3620, note: "私藏面朝大海小院" },
+                { id: "s1_7", name: "7. 第三海水浴场灯光秀", lat: 36.0506, lng: 120.3690, note: "夜景观景最好机位" },
+                { id: "s1_8", name: "8. 鸿盛泰脂渣炉包", lat: 36.0673, lng: 120.3750, note: "绝赞脂渣口味炉包" },
+                { id: "s1_9", name: "9. 台东小吃街原浆散啤", lat: 36.0820, lng: 120.3610, note: "一厂新鲜散啤/原浆" }
+            ],
+            2: [
+                { id: "s2_1", name: "1. 金口路古雅老别墅街", lat: 36.0595, lng: 120.3320, note: "极其静谧慢步" },
+                { id: "s2_2", name: "2. 青岛市美术馆", lat: 36.0645, lng: 120.3340, note: "免预约红墙光影" },
+                { id: "s2_3", name: "3. 龙江路漫画街", lat: 36.0632, lng: 120.3315, note: "龙猫漫画墙大片" },
+                { id: "s2_4", name: "4. 德国总督楼旧址", lat: 36.0640, lng: 120.3300, note: "百年前的水晶吊灯" },
+                { id: "s2_5", name: "5. 江苏路基督教堂", lat: 36.0664, lng: 120.3242, note: "绿顶钟楼机械大时钟" },
+                { id: "s2_6", name: "6. 小林媛烤肉火烧", lat: 36.0668, lng: 120.3235, note: "爆汁火烧配全家福馄饨" },
+                { id: "s2_7", name: "7. 望火楼", lat: 36.0646, lng: 120.3182, note: "百年标志德式建筑" },
+                { id: "s2_8", name: "8. 观海山公园", lat: 36.0660, lng: 120.3210, note: "长焦俯拍教堂仙境" },
+                { id: "s2_9", name: "9. 黄岛路里院/大鲍岛", lat: 36.0735, lng: 120.3175, note: "感受原生态市井烟火" },
+                { id: "s2_10", name: "10. 《什么餐馆》晚餐", lat: 36.0750, lng: 120.3150, note: "海肠捞饭/蒜香鲶鱼" }
+            ],
+            3: [
+                { id: "s3_1", name: "1. 石老人日出 (如是书店)", lat: 36.0963, lng: 120.4950, note: "绝美海上红日" },
+                { id: "s3_2", name: "2. 崂山仰口景区", lat: 36.1950, lng: 120.6720, note: "觅天洞俯瞰黄海湾" },
+                { id: "s3_3", name: "3. 地瓜面包子农家餐", lat: 36.1850, lng: 120.6750, note: "山野菜与野生大蛤蜊" },
+                { id: "s3_4", name: "4. 最美环海路沿线", lat: 36.1432, lng: 120.6860, note: "雕龙嘴、青山渔村茶园" },
+                { id: "s3_5", name: "5. 太清宫", lat: 36.1085, lng: 120.6690, note: "2000多年道教名山" },
+                { id: "s3_6", name: "6. 沿木栈道至八水河", lat: 36.1030, lng: 120.6550, note: "感受落日归山海" },
+                { id: "s3_7", name: "7. 埠西市场海鲜加工", lat: 36.0950, lng: 120.4320, note: "现挑海鲜配袋装青啤" }
+            ]
+        };
+
+        let map;
+        let mapMarkers = [];
+        let routePolyline;
+        let currentDay = 1;
+        let checkedSpots = JSON.parse(localStorage.getItem('qingdao_checked_spots_v2') || '{}');
+
+        // Initial setup on Window Load
+        window.onload = function() {
+            initMap();
+            switchDay(1);
+        };
+
+        // Initialize Leaflet Map
+        function initMap() {
+            // Center map on Qingdao
+            map = L.map('map', {
+                center: [36.06, 120.35],
+                zoom: 12,
+                scrollWheelZoom: false // Avoid zooming when scrolling the webpage
+            });
+
+            // Clean Street Map tiles (OpenStreetMap via CartoDB Voyagers)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; CartoDB &copy; OpenStreetMap',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+        }
+
+        // Switch Days Action
+        function switchDay(dayNum) {
+            currentDay = dayNum;
+            
+            // Toggle Tab buttons style
+            for (let i = 1; i <= 3; i++) {
+                const btn = document.getElementById(`btn-day-${i}`);
+                if (i === dayNum) {
+                    btn.className = "day-active py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center min-h-[80px]";
+                } else {
+                    btn.className = "day-inactive py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center border border-blue-100 min-h-[80px]";
+                }
+            }
+
+            // Show current Day Timeline HTML panel
+            document.querySelectorAll('.day-panel').forEach(panel => panel.classList.add('hidden'));
+            document.getElementById(`day-${dayNum}-content`).classList.remove('hidden');
+
+            // Render Checklist
+            renderChecklist();
+
+            // Refresh Map Markers and route path line
+            updateMapRoute(dayNum);
+        }
+
+        // Update Map Layers
+        function updateMapRoute(dayNum) {
+            if (!map) return;
+
+            // Clear previous layers
+            mapMarkers.forEach(marker => map.removeLayer(marker));
+            mapMarkers = [];
+            if (routePolyline) {
+                map.removeLayer(routePolyline);
+            }
+
+            const currentSpots = spotsData[dayNum];
+            const coordinates = [];
+
+            currentSpots.forEach((spot, index) => {
+                const latLng = [spot.lat, spot.lng];
+                coordinates.push(latLng);
+
+                // Create custom circular numerical marker
+                const customIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div>${index + 1}</div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+
+                // Marker and popup
+                const marker = L.marker(latLng, { icon: customIcon })
+                    .bindPopup(`<div class="font-bold text-slate-800 text-sm">${spot.name}</div><div class="text-xs text-slate-500 mt-0.5">${spot.note}</div>`)
+                    .addTo(map);
+
+                mapMarkers.push(marker);
+            });
+
+            // Draw route line
+            routePolyline = L.polyline(coordinates, {
+                color: dayNum === 1 ? '#2563eb' : (dayNum === 2 ? '#4f46e5' : '#10b981'),
+                weight: 4,
+                opacity: 0.7,
+                dashArray: '5, 8'
+            }).addTo(map);
+
+            // Automatically focus and fit bounds of the day's spots
+            if (coordinates.length > 0) {
+                map.fitBounds(routePolyline.getBounds(), {
+                    padding: [40, 40]
+                });
+            }
+        }
+
+        // Render checklist UI
+        function renderChecklist() {
+            const listContainer = document.getElementById('checklist-items');
+            listContainer.innerHTML = '';
+            
+            const currentSpots = spotsData[currentDay];
+            
+            currentSpots.forEach(spot => {
+                const isChecked = checkedSpots[spot.id] ? 'checked' : '';
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${isChecked ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-100 hover:border-blue-200'}`;
+                
+                itemDiv.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="${spot.id}" ${isChecked} onchange="toggleSpot('${spot.id}')" 
+                               class="w-6 h-6 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer">
+                        <label for="${spot.id}" class="text-base font-bold text-slate-800 cursor-pointer ${isChecked ? 'line-through text-slate-400 font-medium' : ''}">
+                            ${spot.name}
+                        </label>
+                    </div>
+                    <span class="text-xs font-medium bg-slate-200/70 text-slate-600 px-2.5 py-1 rounded-full text-right shrink-0">${spot.note}</span>
+                `;
+                listContainer.appendChild(itemDiv);
+            });
+
+            calculateProgress();
+        }
+
+        // Toggle checkbox
+        function toggleSpot(spotId) {
+            checkedSpots[spotId] = !checkedSpots[spotId];
+            if (!checkedSpots[spotId]) {
+                delete checkedSpots[spotId];
+            }
+            
+            // Save state to localstorage
+            localStorage.setItem('qingdao_checked_spots_v2', JSON.stringify(checkedSpots));
+            
+            // Re-render
+            renderChecklist();
+        }
+
+        // Calculate progress percentage
+        function calculateProgress() {
+            const currentSpots = spotsData[currentDay];
+            let checkedCount = 0;
+            
+            currentSpots.forEach(spot => {
+                if (checkedSpots[spot.id]) checkedCount++;
+            });
+
+            const percent = Math.round((checkedCount / currentSpots.length) * 100);
+            
+            const progressSpan = document.getElementById('checklist-progress');
+            progressSpan.textContent = `${percent}% 已打卡`;
+            if (percent === 100) {
+                progressSpan.className = "text-sm text-white bg-emerald-600 px-3.5 py-1 rounded-full font-black animate-bounce shadow-md";
+            } else {
+                progressSpan.className = "text-sm text-blue-700 bg-blue-50 px-3 py-1 rounded-full font-black";
+            }
+        }
+    </script>
+</body>
+</html>
