@@ -3,708 +3,1173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>青岛3日游·绝美山海交互攻略</title>
+    <title>这个夏天来青岛 · 避暑漫游浪漫手账</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Leaflet Map CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts for modern clean typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- 经典稳定版腾讯地图 2D API，完美兼顾移动端 & iframe 容器 -->
+    <script charset="utf-8" src="https://map.qq.com/api/js?v=2.exp&key=OB4BZ-D4W3U-B7VVO-4PJWW-6TKDJ-WPB77"></script>
+
     <style>
         body {
-            font-family: 'Noto Sans SC', sans-serif;
-            background-color: #f3f9fc;
+            font-family: 'Plus Jakarta Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f8fafc; /* Stripe 经典清爽冷灰底色 */
         }
-        .bg-sea-gradient {
-            background: linear-gradient(135deg, #0a3d62 0%, #1e3799 50%, #0c2461 100%);
+
+        /* Stripe 霓虹渐变 Banner */
+        .stripe-gradient {
+            background: linear-gradient(135deg, #635bff 0%, #3a86ff 40%, #00d4ff 100%);
         }
-        .day-active {
-            background-color: #1e3799;
-            color: white;
-            box-shadow: 0 8px 20px rgba(30, 55, 153, 0.4);
-            transform: translateY(-3px);
+
+        /* 隐藏滚动条 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
-        .day-inactive {
-            background-color: white;
-            color: #2d3748;
-            border: 2px solid #e2e8f0;
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
-        .day-inactive:hover {
-            border-color: #1e3799;
-            color: #1e3799;
+
+        /* 自定义微件阴影与高光 */
+        .stripe-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        /* Custom map pin style */
-        .custom-div-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #1e3799;
-            border: 2px solid white;
-            border-radius: 50%;
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        .stripe-card:hover {
+            border-color: rgba(99, 91, 255, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(148, 163, 184, 0.12), 0 4px 6px -4px rgba(148, 163, 184, 0.12);
         }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
+
+        /* 勾选打卡置灰与淡化 */
+        .completed-card {
+            opacity: 0.65;
+            background-color: #fcfdfe;
+            border-color: #e2e8f0 !important;
+            box-shadow: none !important;
+            transform: none !important;
         }
-        ::-webkit-scrollbar-track {
-            background: #edf2f7;
+
+        /* 进度条动画 */
+        .progress-transition {
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e0;
-            border-radius: 4px;
+
+        /* 自定义地图行走小女孩动画 */
+        @keyframes sway {
+            0%, 100% { transform: rotate(-6deg) translateY(0); }
+            50% { transform: rotate(6deg) translateY(-4px); }
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a0aec0;
+        .animate-sway {
+            animation: sway 0.6s infinite ease-in-out;
+        }
+
+        /* 胶带贴纸手账特效 */
+        .tape-style {
+            background: rgba(254, 240, 138, 0.9);
+            border-left: 2px dashed rgba(234, 179, 8, 0.5);
+            border-right: 2px dashed rgba(234, 179, 8, 0.5);
+        }
+
+        /* 图标加载前保留尺寸，避免页面跳动；加载失败时也不会挤乱文字 */
+        [data-lucide-name] {
+            display: inline-block;
+            flex: 0 0 auto;
         }
     </style>
 </head>
-<body class="text-slate-900 antialiased min-h-screen pb-12">
+<body class="relative min-h-screen text-slate-800 antialiased overflow-x-hidden">
 
-    <!-- Top Banner -->
-    <div class="bg-sea-gradient text-white py-14 px-6 relative overflow-hidden shadow-lg">
-        <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-        <div class="max-w-4xl mx-auto text-center relative z-10">
-            <span class="bg-amber-400 text-slate-950 text-sm font-black px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 inline-block">Qingdao Travel Guide</span>
-            <h1 class="text-4xl md:text-6xl font-black mb-4 tracking-tight">青岛 · 绝美山海三日游</h1>
-            <p class="text-base md:text-xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed">
-                「自西向东、穿越百年、落日归山海」 视频精华无损提取，带你避开人流直奔极致机位！
-            </p>
+    <div class="max-w-7xl mx-auto px-4 py-4 md:py-8">
+
+        <!-- 头部 Banner 区域：仿照 Stripe 高级幻彩质感 -->
+        <header class="stripe-gradient rounded-[2rem] p-6 md:p-10 mb-6 shadow-xl relative overflow-hidden text-white">
+            <div class="absolute right-0 bottom-0 opacity-15 pointer-events-none translate-x-6 translate-y-6">
+                <i data-lucide-name="palm-tree" class="w-72 h-72"></i>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">
+                            🏝️ SUMMER GUIDE
+                        </span>
+                        <span class="bg-emerald-400/20 text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+                            ● PDF 配套互动工具
+                        </span>
+                    </div>
+                    <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
+                        这个夏天，来青岛吧 🌊
+                    </h1>
+                    <p class="text-white/80 mt-2 text-sm md:text-base font-light max-w-2xl">
+                        “红瓦绿树，碧海蓝天。” 精心设计的 3 日海岸慢游行程。按天切换路线、地图定位、记录打卡，和《青岛旅行全景手绘攻略》搭配使用更省心。
+                    </p>
+                    <!-- 裂变传播：一键复制链接 -->
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <button onclick="copyShareLink()" class="bg-white text-[#635bff] hover:bg-slate-50 font-bold text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition active:scale-95">
+                            <i data-lucide-name="share-2" class="w-3.5 h-3.5"></i>
+                            <span>分享互动地图 ✈️</span>
+                        </button>
+                        <a href="./output/pdf/青岛旅行全景手绘攻略_V2.3_手机阅读版.pdf" target="_blank" class="bg-white/15 hover:bg-white/25 text-white border border-white/25 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition active:scale-95 backdrop-blur-sm">
+                            <i data-lucide-name="book-open-text" class="w-3.5 h-3.5"></i>
+                            <span>打开配套电子攻略</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 数据徽章 -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-black/15 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+                    <div class="px-3 py-1 text-center">
+                        <p class="text-[11px] text-white/60">🗓️ 行程天数</p>
+                        <p class="text-xl font-bold">3 <span class="text-xs font-normal text-white/70">Days</span></p>
+                    </div>
+                    <div class="px-3 py-1 border-l border-white/10 text-center">
+                        <p class="text-[11px] text-white/60">📍 必去打卡</p>
+                        <p class="text-xl font-bold">15 <span class="text-xs font-normal text-white/70">处</span></p>
+                    </div>
+                    <div class="px-3 py-1 border-l border-white/10 text-center">
+                        <p class="text-[11px] text-white/60">🚲 沿海里程</p>
+                        <p class="text-xl font-bold">~28 <span class="text-xs font-normal text-white/70">KM</span></p>
+                    </div>
+                    <div class="px-3 py-1 border-l border-white/10 text-center">
+                        <p class="text-[11px] text-white/60">💰 预算建议</p>
+                        <p class="text-xl font-bold text-emerald-300">¥850 <span class="text-xs font-normal text-white/70">起</span></p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Day & 视图切换器 -->
+        <div class="sticky top-2 z-40 bg-[#f8fafc]/90 py-2 mb-4 backdrop-blur-sm">
+            <div class="flex flex-col gap-2">
+                <!-- 三天行程 Tabs -->
+                <div class="bg-slate-200/50 p-1 rounded-2xl flex gap-1 border border-slate-200">
+                    <button onclick="switchDay(1)" id="tab-day1" class="day-tab flex-1 py-3 text-center rounded-xl font-semibold text-sm transition-all duration-300 shadow-sm bg-white text-[#635bff]">
+                        DAY 1 <span class="hidden sm:inline">| 老城漫步</span>
+                    </button>
+                    <button onclick="switchDay(2)" id="tab-day2" class="day-tab flex-1 py-3 text-center rounded-xl font-semibold text-sm transition-all duration-300 text-slate-500 hover:text-slate-800">
+                        DAY 2 <span class="hidden sm:inline">| 经典地标</span>
+                    </button>
+                    <button onclick="switchDay(3)" id="tab-day3" class="day-tab flex-1 py-3 text-center rounded-xl font-semibold text-sm transition-all duration-300 text-slate-500 hover:text-slate-800">
+                        DAY 3 <span class="hidden sm:inline">| 休闲慢游</span>
+                    </button>
+                </div>
+
+                <!-- 手机端专属：行程 vs 地图 切换开关 -->
+                <div class="flex md:hidden bg-slate-200/60 p-1 rounded-xl gap-1 text-xs font-bold">
+                    <button onclick="switchMobileView('list')" id="m-btn-list" class="flex-1 py-2 rounded-lg text-center bg-white text-[#635bff] shadow-sm transition">
+                        📝 行程卡片
+                    </button>
+                    <button onclick="switchMobileView('map')" id="m-btn-map" class="flex-1 py-2 rounded-lg text-center text-slate-600 transition">
+                        🗺️ 探路地图
+                    </button>
+                </div>
+            </div>
         </div>
-        <!-- Wave decoration -->
-        <div class="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 120" fill="none" class="w-full h-8 text-[#f3f9fc] preserve-3d">
-                <path d="M0,32L120,42.7C240,53,480,75,720,74.7C960,75,1200,53,1320,42.7L1440,32L1440,120L1320,120C1200,120,960,120,720,120C480,120,240,120,120,120L0,120Z" fill="currentColor"></path>
-            </svg>
+
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- 左侧列表区 -->
+            <div id="left-list-container" class="lg:col-span-6 xl:col-span-5 flex flex-col gap-6">
+
+                <!-- 打卡计数进度条 -->
+                <div class="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm">
+                    <div class="flex items-center justify-between w-full mb-2">
+                        <div class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <i data-lucide-name="check-circle" class="w-4 h-4 text-[#635bff]"></i>
+                            <span id="day-route-summary">玩法：漫步百年红瓦老街，邂逅欧式浪漫</span>
+                        </div>
+                        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded" id="day-transport">🚶 步行为主</span>
+                    </div>
+
+                    <div class="flex items-center justify-between w-full border-t border-slate-100 pt-2 text-xs text-slate-500">
+                        <span class="flex items-center gap-1">
+                            🎯 行程打卡记录: <span id="checked-progress-text" class="font-bold text-[#635bff]">0/5</span> 已完成
+                        </span>
+                        <!-- 进度条 -->
+                        <div class="w-32 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div id="checked-progress-bar" class="bg-[#635bff] h-full w-0 progress-transition"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 动态卡片容器 -->
+                <div id="pois-container" class="space-y-4">
+                    <!-- 卡片由 JS 动态装载 -->
+                </div>
+
+                <!-- 独家变现广告位：🎁 漫游旅行百宝箱 (专享折扣/入驻坑位) -->
+                <div class="bg-gradient-to-r from-purple-50 to-blue-50 border border-blue-100 rounded-3xl p-5 shadow-sm relative overflow-hidden">
+                    <div class="absolute right-2 top-2 text-4xl opacity-10 pointer-events-none">🎁</div>
+                    <div class="flex items-center gap-2 mb-3 text-purple-900 font-extrabold text-sm">
+                        <i data-lucide-name="gem" class="w-4 h-4 text-purple-600"></i>
+                        <span>🎁 漫游旅行百宝箱 (小红书专属福利)</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div onclick="openPartner('旅拍', 'Qingdao Studio', '跟拍立减50元，包出片！')" class="bg-white p-3 rounded-xl border border-purple-100 cursor-pointer hover:border-purple-300 hover:shadow-sm transition active:scale-95">
+                            <p class="text-xs font-bold text-purple-800">📸 独家旅拍</p>
+                            <p class="text-[10px] text-slate-500 mt-1 leading-tight">明星团队跟拍/租马面裙</p>
+                            <span class="mt-2 inline-block text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-bold">专享减￥50</span>
+                        </div>
+                        <div onclick="openPartner('包车', '土著包车服务队', '老司机带路，纯玩无套路！')" class="bg-white p-3 rounded-xl border border-purple-100 cursor-pointer hover:border-purple-300 hover:shadow-sm transition active:scale-95">
+                            <p class="text-xs font-bold text-blue-800">🚗 包车漫游</p>
+                            <p class="text-[10px] text-slate-500 mt-1 leading-tight">本地人带路 / 深度沿海线</p>
+                            <span class="mt-2 inline-block text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold">无套路包车</span>
+                        </div>
+                        <div onclick="openPartner('鲜啤', '一厂鲜啤闪送', '看夕阳听民谣必备神器！')" class="bg-white p-3 rounded-xl border border-purple-100 cursor-pointer hover:border-purple-300 hover:shadow-sm transition active:scale-95">
+                            <p class="text-xs font-bold text-amber-800">🍺 鲜啤闪送</p>
+                            <p class="text-[10px] text-slate-500 mt-1 leading-tight">正宗一厂原浆 / 同城闪送</p>
+                            <span class="mt-2 inline-block text-[9px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-bold">冰镇2h达</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 美食推荐 -->
+                <div id="food-recommendation-panel" class="bg-[#fcfdfe] border border-blue-100 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+                    <div class="absolute right-4 top-4 text-3xl opacity-10">🦀</div>
+                    <div class="flex items-center gap-2 mb-2 text-blue-800 font-bold text-sm">
+                        <i data-lucide-name="soup" class="w-4 h-4 text-blue-500"></i>
+                        <span>今日顺路宝藏美食（绝不绕路）</span>
+                    </div>
+                    <p id="food-detail-text" class="text-xs md:text-sm text-slate-600 leading-relaxed font-light">
+                        加载中...
+                    </p>
+                </div>
+            </div>
+
+            <!-- 右侧地图展示区 -->
+            <div id="right-map-container" class="hidden md:block lg:col-span-6 xl:col-span-7 md:sticky md:top-24">
+                <div class="relative bg-white p-2.5 rounded-[2rem] shadow-xl border border-slate-200/60">
+
+                    <!-- 地图容器 -->
+                    <div id="map-container" class="w-full h-[400px] md:h-[640px] rounded-[1.7rem] overflow-hidden border border-slate-100"></div>
+
+                    <!-- 重置视野 -->
+                    <div class="absolute top-6 right-6 z-20">
+                        <button onclick="resetMapView()" class="bg-white hover:bg-slate-50 active:scale-95 text-slate-700 p-3 rounded-2xl shadow-md border border-slate-200 flex items-center justify-center transition" title="自适应路线">
+                            <i data-lucide-name="maximize-2" class="w-5 h-5 text-[#635bff]"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="mt-16 text-center text-xs text-slate-400 border-t border-slate-100 pt-8 pb-12">
+            <p class="text-sm text-slate-500 mb-1">“慢下来，感受青岛的浪漫与温柔” 🌊</p>
+            <p>© 2026 青岛避暑漫游地图助手 · Stripe 风格极简设计</p>
+        </footer>
+    </div>
+
+    <!-- 💡 原生福利/分销直通车通用弹出框 (无报错，替代传统难看的 alert) -->
+    <div id="ad-benefit-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] max-w-sm w-full p-6 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in-95 duration-200">
+            <button onclick="closeBenefitModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide-name="x" class="w-5 h-5"></i>
+            </button>
+            <div class="text-center">
+                <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl" id="ad-modal-icon">
+                    🎟️
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 mb-1" id="ad-modal-title">携程特惠直通车</h3>
+                <p class="text-xs text-rose-500 font-semibold mb-3" id="ad-modal-promo">暗号【青岛特惠】专享9折优惠</p>
+                <p class="text-xs text-slate-500 leading-relaxed px-2 mb-5" id="ad-modal-desc">
+                    已为您对接携程官方门票接口。点击下方预订不仅可以省去排队时间，还能享受独家分销折扣价！
+                </p>
+                <div class="flex flex-col gap-2">
+                    <button onclick="performAffiliateRedirect()" class="w-full bg-[#635bff] hover:bg-[#5249f0] text-white font-bold text-xs py-3 rounded-xl shadow-md transition active:scale-95">
+                        👉 立即预订 (携程官方特惠)
+                    </button>
+                    <button onclick="closeBenefitModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs py-3 rounded-xl transition">
+                        我再想想
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Main Container -->
-    <div class="max-w-6xl mx-auto px-4 mt-8">
-        
-        <!-- Day Selector Tabs (Extra Large for Mobile touch targets) -->
-        <div class="grid grid-cols-3 gap-3 md:gap-6 mb-8">
-            <button onclick="switchDay(1)" id="btn-day-1" class="day-active py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center min-h-[80px]">
-                <span class="text-xs md:text-sm opacity-85 uppercase tracking-wider">Day 01</span>
-                <span class="text-lg md:text-2xl mt-1">绝美海岸线</span>
-            </button>
-            <button onclick="switchDay(2)" id="btn-day-2" class="day-inactive py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center min-h-[80px]">
-                <span class="text-xs md:text-sm opacity-85 uppercase tracking-wider">Day 02</span>
-                <span class="text-lg md:text-2xl mt-1">百年老城区</span>
-            </button>
-            <button onclick="switchDay(3)" id="btn-day-3" class="day-inactive py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center min-h-[80px]">
-                <span class="text-xs md:text-sm opacity-85 uppercase tracking-wider">Day 03</span>
-                <span class="text-lg md:text-2xl mt-1">崂山全景线</span>
-            </button>
-        </div>
-
-        <!-- Guide Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            <!-- Timeline (Left Column) - 7 Cols -->
-            <div class="lg:col-span-7 bg-white rounded-3xl p-6 md:p-10 shadow-xl border border-slate-100">
-                
-                <!-- Day 1 Content -->
-                <div id="day-1-content" class="day-panel">
-                    <div class="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100">
-                        <h2 class="text-2xl md:text-3xl font-black text-slate-900 flex items-center">
-                            <span class="w-2.5 h-8 bg-blue-600 rounded-full mr-3"></span>第一天：自西向东慢慢逛
-                        </h2>
-                        <span class="text-base bg-blue-50 text-blue-700 font-extrabold px-4 py-1.5 rounded-full">海岸精华线</span>
-                    </div>
-
-                    <!-- Timeline Item 1 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-blue-300 last:border-0">
-                        <!-- Icon Circle -->
-                        <div class="absolute -left-4 top-1 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md shadow-blue-200">
-                            上
-                        </div>
-                        <div class="mb-2 text-sm font-black text-blue-600 tracking-wider">上午 · 海岸地标巡礼</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">经典起点与海风地标</h3>
-                        <div class="space-y-6">
-                            <!-- Spot 1 -->
-                            <div class="bg-slate-50 p-5 rounded-2xl relative group hover:bg-blue-50/40 transition-colors border border-slate-100">
-                                <span class="absolute top-4 right-4 text-emerald-700 text-xs md:text-sm bg-emerald-50 px-3 py-1 rounded-full font-black">100%同框机位</span>
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">1. 栈桥 (青岛地标象征)</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">青岛必打卡首站！极具代表性的百年海上栈桥。</p>
-                                <div class="mt-3 text-sm md:text-base bg-amber-50 text-amber-900 p-4 rounded-xl border border-amber-200/60 leading-relaxed">
-                                    <strong>💡 独家避坑机位：</strong>最美的位置根本不在栈桥桥身上，请前往它西侧的<strong>「李恩农公园」</strong>！只有在这里，才能完美拍到栈桥回澜阁与红瓦、绿树、碧海、蓝天同框的神级构图。
-                                </div>
-                            </div>
-                            <!-- Spot 2 -->
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
-                                <span class="text-xs md:text-sm text-blue-700 bg-blue-50 px-3 py-1 rounded-md font-black inline-block mb-2">需提早预约</span>
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">2. 海军博物馆</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">我国首屈一指的海军主题博物馆。在海上展区，我国的<strong>「第一艘驱逐舰」</strong>和<strong>「第一艘核潜艇」</strong>都真实停泊在此，现场极其雄伟震撼！</p>
-                                <p class="text-sm text-rose-600 mt-2 font-black">⚠️ 避坑提醒：去之前务必提前在微信公众号预约，现场无法临时进！</p>
-                            </div>
-                            <!-- Spot 3 -->
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">3. 小青岛</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">就在海博旁边，是一座非常秀美清幽的琴形海岛。岛上的白色灯塔、环岛木栈道和琴女雕像极具浪漫色彩，真是“一步一景，怎么拍都好看”。</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 2 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-blue-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md shadow-amber-200">
-                            中
-                        </div>
-                        <div class="mb-2 text-sm font-black text-amber-600 tracking-wider">中午 · 360°云端瞰海</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">高空无死角，超高性价比自助</h3>
-                        <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-200/70">
-                            <h4 class="font-extrabold text-lg md:text-xl text-amber-950 flex items-center">
-                                🏢 汇泉王朝大饭店·旋转餐厅
-                            </h4>
-                            <p class="text-base text-slate-800 mt-2 leading-relaxed">视频强烈安利的就餐位！不用爬山受累，不用人挤人。坐在舒适旋转餐厅里，一边享受美食，一边俯瞰第一海水浴场和“红瓦绿树，碧海蓝天”的无死角画卷。</p>
-                            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm md:text-base">
-                                <div class="bg-white/80 p-3 rounded-xl border border-amber-100">💰 <strong>人均价格：</strong>仅需100多元（五星级品质）</div>
-                                <div class="bg-white/80 p-3 rounded-xl border border-amber-100">💡 <strong>提示：</strong>一定提前预约靠窗座位！</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 3 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-blue-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                            下
-                        </div>
-                        <div class="mb-2 text-sm font-black text-emerald-600 tracking-wider">下午 · 浪漫万国建筑群</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">异国风情街道与慢步轻徒步</h3>
-                        <div class="space-y-6">
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">4. 八大关</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">极富浪漫气息的“万国建筑博览会”，无数幢风格各异的百年欧式老别墅掩映在红枫与雪松之间，随手一拍就是假装在欧洲的质感大片。</p>
-                            </div>
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
-                                <span class="text-xs md:text-sm text-rose-700 bg-rose-50 px-3 py-1 rounded-full font-black inline-block mb-2">小众私藏宝地</span>
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">5. 海边木栈道 ➡️ 第三海水浴场</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">顺着八大关旁边的海边木栈道，一路吹着温润的海风、踩着涛声散步，直达第三海水浴场。</p>
-                                <div class="mt-3 text-sm md:text-base bg-rose-50/40 text-rose-950 p-4 rounded-xl border border-rose-200/60 leading-relaxed">
-                                    <strong>☕ 途中秘境强推：【彼岸咖啡】</strong>。这也是博主私藏的心头好。人少极清静，点一杯咖啡面向浩瀚黄海，听着海浪，吹吹海风，治愈感直接拉满！
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 4 -->
-                    <div class="relative pl-10 pb-4 border-l-2 border-dashed border-blue-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-indigo-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                            晚
-                        </div>
-                        <div class="mb-2 text-sm font-black text-indigo-600 tracking-wider">晚上 · 霓虹巨幕与本地烟火</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">震憾楼体秀与正宗脂渣炉包</h3>
-                        <div class="space-y-6">
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">看点：第三海水浴场灯光秀</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">这里是欣赏青岛东部CBD浮山湾摩天大楼灯光秀的<strong>「全场最佳观测角度」</strong>。看着流光溢彩的炫目动画倒映在海面上，极为震憾。</p>
-                            </div>
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
-                                <span class="text-xs md:text-sm text-amber-700 bg-amber-50 px-2.5 py-1 rounded font-black inline-block mb-2">青岛特色老字号</span>
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">美食一：鸿盛泰炉包</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">看完秀立刻去吃！必点他们家的<strong>【脂渣口味】</strong>炉包。外底面极其酥脆，咬一口浓郁油脂爆汁，绝对是原汁原味的老青岛印记。</p>
-                            </div>
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-blue-50/40 transition-colors border border-slate-100">
-                                <span class="text-xs md:text-sm text-blue-700 bg-blue-50 px-2.5 py-1 rounded font-black inline-block mb-2">绝佳夜市</span>
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">美食二：台东步行街小吃街</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">青岛夜生活的人气顶流。来上一袋本地人最爱、装在塑料袋里<strong>「论斤称的现打青岛啤酒原浆（或纯生）」</strong>！百香果、海盐、荔枝果味精酿也超级好喝，清爽解腻极了！</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Day 2 Content -->
-                <div id="day-2-content" class="day-panel hidden">
-                    <div class="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100">
-                        <h2 class="text-2xl md:text-3xl font-black text-slate-900 flex items-center">
-                            <span class="w-2.5 h-8 bg-indigo-600 rounded-full mr-3"></span>第二天：慢调百年老城区
-                        </h2>
-                        <span class="text-base bg-indigo-50 text-indigo-700 font-extrabold px-4 py-1.5 rounded-full">人文底蕴线</span>
-                    </div>
-
-                    <!-- Timeline Item 1 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-indigo-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                            上
-                        </div>
-                        <div class="mb-2 text-sm font-black text-indigo-600 tracking-wider">上午 · 宁静老街与大片红墙</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">避开嘈杂人群，私享神级人文摄影位</h3>
-                        <div class="space-y-6">
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">1. 金口路老街慢漫逛</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">从金口一路开始，踏着蜿蜒曲折、碎石漫漫的老马路向上走。路边每一座镶着黑底历史牌匾的旧别墅，都在诉说老青岛的百年沧桑，幽静得甚至能听到头顶信鸽扇动翅膀的声音。</p>
-                            </div>
-                            <!-- Counter-Intuitive Hack -->
-                            <div class="bg-rose-50/50 p-5 rounded-2xl border-2 border-rose-200/80 relative">
-                                <span class="absolute top-4 right-4 text-rose-700 text-xs md:text-sm bg-rose-50 px-3 py-1 rounded-full font-black">独家避坑良心建议</span>
-                                <h4 class="font-black text-lg md:text-xl text-rose-950 flex items-center">
-                                    ❌ 大学路网红红墙 ➡️ 🌟 青岛市美术馆
-                                </h4>
-                                <p class="text-base text-slate-800 mt-3 leading-relaxed"><strong>视频良心秘籍：</strong>走到鱼山路和大学路交叉口，千万千万别在那里和成百上千的人排队挤红墙！直接拐个弯，进旁边的<strong>「青岛市美术馆」</strong>。</p>
-                                <ul class="list-disc list-inside text-sm md:text-base text-slate-700 mt-3 space-y-2 font-medium">
-                                    <li>免预约，免门票，大方直接进！</li>
-                                    <li>经典的罗马红墙配上参天法桐的光影，以及纯木质结构的怀旧主楼。</li>
-                                    <li>极其安静完全没人，成片率和空间质感<strong>比去网红墙拍好上10倍</strong>。</li>
-                                    <li>里面还能买到极其别致精美、富有深厚青岛人文底蕴的文创伴手礼。</li>
-                                </ul>
-                            </div>
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">2. 龙江路漫画墙</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（离美术馆仅200米）随处可见手绘宫崎骏龙猫、马里奥、皮卡丘等满墙巨幅漫画，满街都洋溢着日系治愈、清亮明媚的文艺和元气风。</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 2 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-indigo-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md shadow-amber-200">
-                            中
-                        </div>
-                        <div class="mb-2 text-sm font-black text-amber-600 tracking-wider">中午 · 德式古堡与爆汁火烧</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">最具代表性德式建筑与街巷小吃</h3>
-                        <div class="space-y-6">
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
-                                <span class="text-xs md:text-sm text-blue-700 bg-blue-50 px-2.5 py-1 rounded font-black">门票 ¥20</span>
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900 mt-2">3. 德国总督楼旧址 (迎宾馆)</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（步行300米即达）青岛德式城堡旧址中最富丽堂皇、最具有代表性的一座。里面可以看到百年前珍贵的水晶大吊灯、象牙材质钢琴、复古雕花大壁炉，令人叹为观止。属于**青岛必看古迹**。</p>
-                            </div>
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">4. 江苏路基督教堂</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（前行300米即至）黄石粗犷砌筑配上别致的绿顶，宛若安徒生笔下的北欧神话建筑。巨型钟楼机械时钟至今运转了上百年，分秒不差。</p>
-                            </div>
-                            <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-200/70">
-                                <span class="text-xs md:text-sm text-amber-800 bg-amber-100 px-3 py-1 rounded-full font-black">本地人吃货神店</span>
-                                <h4 class="font-extrabold text-lg md:text-xl text-amber-950 mt-2">
-                                    🥟 午餐力荐：【小林媛烤肉火烧】
-                                </h4>
-                                <p class="text-base text-slate-800 mt-2 leading-relaxed">藏在教堂不远处的居民街角。他们家的<strong>【烤肉火烧】</strong>外皮金黄酥脆如纸，肉馅饱满。一口咬下去，酥皮碎裂在口中，伴随着滚烫鲜美的汁水瞬间爆出！再来一碗全家福馄饨，这是老城区最勾魂的地道家常味道。</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 3 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-indigo-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                            下
-                        </div>
-                        <div class="mb-2 text-sm font-black text-emerald-600 tracking-wider">下午 · 极佳登高点与老里院</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">长焦镜头下的“绿野仙踪”与老宅门院</h3>
-                        <div class="space-y-6">
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">5. 观象山历史街区 ➡️ 「望火楼」</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（步行约500米）徐徐步入充满生活气息的观象一路。先打卡经典浪漫的斜坡转角楼，再欣赏饱含历史厚重风霜的标志性圆形德式建筑——<strong>【望火楼】</strong>，这里深受各大电影剧组的青睐。</p>
-                            </div>
-                            
-                            <div class="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-200/70">
-                                <span class="text-xs md:text-sm text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full font-black">绝对私藏：小众海景山头</span>
-                                <h4 class="font-extrabold text-lg md:text-xl text-emerald-950 mt-2">6. 观海山公园</h4>
-                                <p class="text-base text-slate-800 mt-2 leading-relaxed">沿着平原路和观海二路一路上坡。这是个极少有外地人踏足的静谧山头。在此登顶俯瞰，视野豁然开朗，可以无死角俯拍栈桥、天主教堂以及整片老城区的震撼壮丽全貌。</p>
-                                <p class="text-sm text-emerald-900 mt-2 font-black">📸 摄影Tips：一定记得把手机或相机焦距拉到【长焦焦段】（3x或5x以上），绝对能拍出如童话梦境般空灵迷蒙的绝美青岛！</p>
-                            </div>
-
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-indigo-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">7. 黄岛路老里院 ➡️ 大鲍岛休闲街区</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（步行下山300米）穿进深邃斑驳的黄岛路。这里拥有12个至今保存极好的经典青岛“里院”民居群落，是百年市井的根基所在。现在与修缮一新的大鲍岛街区完美交融，走走逛逛，感受最地道的人间烟火。</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 4 -->
-                    <div class="relative pl-10 pb-4 border-l-2 border-dashed border-indigo-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-indigo-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                            晚
-                        </div>
-                        <div class="mb-2 text-sm font-black text-indigo-600 tracking-wider">晚上 · 惊艳鲁家本帮菜</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">陪伴两代老青岛长大的金牌菜馆</h3>
-                        <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-200/70">
-                            <h4 class="font-black text-lg md:text-xl text-indigo-950">
-                                🍽️ 晚餐力荐：【什么餐馆】
-                            </h4>
-                            <p class="text-base text-slate-800 mt-2 leading-relaxed">店名就叫《什么餐馆》，是深藏不露的殿堂级青岛家常鲁菜老店。盲点不踩雷：</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm md:text-base mt-3">
-                                <div class="bg-white/90 p-3 rounded-xl border border-indigo-100">🍲 <strong>海肠捞饭 / 鲍鱼捞饭</strong> (米饭吸满浓稠芡汁，鲜到灵魂颤抖)</div>
-                                <div class="bg-white/90 p-3 rounded-xl border border-indigo-100">🐟 <strong>蒜香鲶鱼 / 辣大蛤</strong> (鲶鱼肉嫩无刺，香辣过瘾，下酒一绝)</div>
-                            </div>
-                            <p class="text-sm text-indigo-900 mt-3 font-black">💡 评价：闭眼点，道道绝，百分之百的老字号硬实力！</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Day 3 Content -->
-                <div id="day-3-content" class="day-panel hidden">
-                    <div class="flex items-center justify-between mb-8 pb-4 border-b-2 border-slate-100">
-                        <h2 class="text-2xl md:text-3xl font-black text-slate-900 flex items-center">
-                            <span class="w-2.5 h-8 bg-emerald-600 rounded-full mr-3"></span>第三天：崂山山海全景线
-                        </h2>
-                        <span class="text-base bg-emerald-50 text-emerald-700 font-extrabold px-4 py-1.5 rounded-full">包车尊享线</span>
-                    </div>
-
-                    <!-- Important Prep Banner -->
-                    <div class="bg-amber-50 text-amber-950 p-5 rounded-2xl mb-8 border border-amber-200 flex items-start gap-4 shadow-sm">
-                        <span class="text-3xl">🚗</span>
-                        <div class="text-sm md:text-base leading-relaxed">
-                            <h4 class="font-black text-base md:text-lg">崂山极舒适神级玩法：强烈要求「包车」！</h4>
-                            <p class="text-slate-800 mt-1">崂山景区面积大、排队换乘折腾。强烈建议包车出行！不仅能做到【司机随时就近停车，您下车沿海滨步道慢慢拍照，走累了打个电话司机立刻开到你面前接上】，这才是旅游，千万不要图省小钱而遭罪排长队！</p>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 1 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-emerald-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                            晨
-                        </div>
-                        <div class="mb-2 text-sm font-black text-blue-600 tracking-wider">清晨 · 海上朝阳</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">最美海岸线的破晓晨光</h3>
-                        <div class="bg-slate-50 p-5 rounded-2xl hover:bg-emerald-50/40 transition-colors border border-slate-100">
-                            <h4 class="font-extrabold text-lg md:text-xl text-slate-900">1. 石老人沙滩「如是书店/咖啡」</h4>
-                            <p class="text-base text-slate-700 mt-2 leading-relaxed">清晨包车先到这里。坐在极有格调的海边大落地窗前，或者直接踩在细腻的沙滩上，静静守候海平线上冉冉升起、霞光万道的绝美日出。</p>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 2 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-emerald-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md shadow-amber-200">
-                            上
-                        </div>
-                        <div class="mb-2 text-sm font-black text-amber-600 tracking-wider">上午 · 凌驾青云俯瞰黄海</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">极陡峭险峰与洞穴密道</h3>
-                        <div class="bg-slate-50 p-5 rounded-2xl hover:bg-emerald-50/40 transition-colors border border-slate-100">
-                            <h4 class="font-extrabold text-lg md:text-xl text-slate-900">2. 仰口游览区 (推荐：仰口进，太清出)</h4>
-                            <p class="text-base text-slate-700 mt-2 leading-relaxed">乘坐缆车索道轻松至半山腰。接着，亲自挑战攀爬奇绝怪异的<strong>【觅天洞】</strong>，登顶极具雄伟之气的<strong>【寿字碑】</strong>。当踏上山顶最高观景台的一瞬，无垠翠蓝的黄海巨幕、弧形优美的仰口沙滩和沿海静谧小渔村尽收眼底，视野极其震撼，堪称无敌！</p>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 3 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-emerald-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                            中
-                        </div>
-                        <div class="mb-2 text-sm font-black text-emerald-600 tracking-wider">中午 · 崂山山海农家宴</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">最接地气的地道农家野味与海味</h3>
-                        <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-200/70">
-                            <span class="text-xs md:text-sm text-amber-800 bg-amber-100 px-3 py-1 rounded-full font-black">来崂山必点招牌</span>
-                            <h4 class="font-extrabold text-lg md:text-xl text-amber-950 mt-2">
-                                🥟 午餐推荐：崂山大姨「地瓜面包子」
-                            </h4>
-                            <p class="text-base text-slate-800 mt-2 leading-relaxed">下山直接品尝特色！黑亮筋道、略带回甘的地瓜面里，包着崂山采摘的鲜嫩山野菜与肥美多汁的野生大蛤蜊肉，健康鲜美无比！再配上一大盆热乎乎、飘着蛋花的<strong>【海鲜疙瘩汤】</strong>，真的是山海融合的鲜极滋味！</p>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 4 -->
-                    <div class="relative pl-10 pb-10 border-l-2 border-dashed border-emerald-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-teal-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                            下
-                        </div>
-                        <div class="mb-2 text-sm font-black text-teal-600 tracking-wider">下午 · 环海仙境与道观祖庭</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">漫山茶园、千年银杏、最美环海公路</h3>
-                        <div class="space-y-6">
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-emerald-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">3. 自驾最美环海公路 (往垭口方向)</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">一路饱览漫山遍野的绿油油茶园、辽阔无边的大海与梦幻般的红瓦渔村。途中司机可以停下来，让您随时漫游、打卡<strong>【雕龙嘴】</strong>、<strong>【华严寺(梵岭前)】</strong>、以及红瓦红顶的<strong>【青山渔村】</strong>等绝美国画级机位。</p>
-                                <div class="mt-3 text-sm md:text-base bg-emerald-50 text-emerald-950 p-4 rounded-xl border border-emerald-100 leading-relaxed">
-                                    <strong>🍵 闲适体验：</strong>一定要找个沿崖的海景茶园，面对一望无际的万顷碧波，哈一杯甘甜回甘、香气高雅的<strong>【崂山绿茶】</strong>，这就是真正的向往的生活。
-                                </div>
-                            </div>
-                            <div class="bg-slate-50 p-5 rounded-2xl hover:bg-emerald-50/40 transition-colors border border-slate-100">
-                                <h4 class="font-extrabold text-lg md:text-xl text-slate-900">4. 太清宫游览区 ➡️ 沿木栈道至八水河</h4>
-                                <p class="text-base text-slate-700 mt-2 leading-relaxed">（过垭口后步行30分钟）漫步在有着2000多年历史的中国道教圣地“太清宫”。观赏里面的龙头古树、参天银杏与大老子雕像。随后沿着秀美的太清海滨木栈道一路漫游，直达壮丽的<strong>【八水河】</strong>。</p>
-                                <p class="text-sm md:text-base text-rose-700 font-black mt-2">🌟 崂山最最华丽的“山海精华路段”：一侧是连绵雄峻的巍巍青山，一侧是辽阔无垠的壮丽黄海。古诗里的“落日归山海”，完美的具象化场景就在这展现！</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Item 5 -->
-                    <div class="relative pl-10 pb-4 border-l-2 border-dashed border-emerald-300 last:border-0">
-                        <div class="absolute -left-4 top-1 bg-indigo-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                            晚
-                        </div>
-                        <div class="mb-2 text-sm font-black text-indigo-600 tracking-wider">晚上 · “哈啤酒，吃蛤蜊”圆满收官</div>
-                        <h3 class="text-xl md:text-2xl font-black text-slate-900 mb-3">痛快买海鲜到老啤酒屋加工，喝个过瘾</h3>
-                        <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-200/70">
-                            <h4 class="font-extrabold text-lg md:text-xl text-indigo-950 flex items-center">
-                                🦞 晚餐力推：埠西海鲜市场 + 啤酒屋加工
-                            </h4>
-                            <p class="text-base text-slate-800 mt-2 leading-relaxed">下山后，让包车司机一脚油门直奔全城最火的<strong>「埠西海鲜市场」</strong>。进去自己挑选生猛的大螃蟹、巨肥的生蚝、活蹦乱跳的皮皮虾（大虾）！直接拎着鲜活的海鲜，送到旁边相连的老青岛啤酒屋让老板现做加工。</p>
-                            <p class="text-sm md:text-base text-indigo-950 mt-3 font-black bg-white p-3 rounded-xl border border-indigo-100">
-                                🍺 正宗吃法：现煮热气腾腾的海鲜大餐 + 点一扎新鲜出炉、带着泡沫的**「一厂青岛生啤酒/原浆啤酒」**！大口吃海鲜，大口哈青啤，给这趟惊艳完美的青岛之行，画上一个最痛快、最酣畅淋漓的句号！
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Sidebar Info (Right Column) - 5 Cols -->
-            <div class="lg:col-span-5 space-y-6 lg:sticky lg:top-6">
-                
-                <!-- Leaflet Real Interactive Map -->
-                <div class="bg-white rounded-3xl p-5 shadow-xl border border-slate-100">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg md:text-xl font-black text-slate-900 flex items-center">
-                            🗺️ 青岛真实轨迹地图
-                        </h3>
-                        <span class="text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full font-bold">自适应联动</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mb-4">切换天数，地图会自动定位，绘制当天视频提及景点的真实路线和坐标点。</p>
-                    
-                    <!-- Leaflet Container -->
-                    <div id="map" class="h-64 md:h-96 w-full rounded-2xl shadow-inner relative z-10 border border-slate-200"></div>
-                </div>
-
-                <!-- Interactive Checklist (Extra large for Mobile touch targets) -->
-                <div class="bg-white rounded-3xl p-5 shadow-xl border border-slate-100">
-                    <h3 class="text-lg md:text-xl font-black text-slate-900 mb-2 flex items-center justify-between">
-                        <span>🎒 行程打卡单</span>
-                        <span id="checklist-progress" class="text-xs text-blue-700 bg-blue-50 px-3 py-1 rounded-full font-black">0% 已打卡</span>
-                    </h3>
-                    <p class="text-xs text-slate-500 mb-4">去到一个景点就在这勾选，数据自动保存在本地，不怕丢哦！</p>
-                    
-                    <div id="checklist-items" class="space-y-3.5 max-h-[22rem] overflow-y-auto pr-1">
-                        <!-- Dynamic Checklists go here via JS -->
-                    </div>
-                </div>
-
-                <!-- Video Secret Summary -->
-                <div class="bg-gradient-to-br from-indigo-950 to-blue-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
-                    <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">🌊</div>
-                    <h3 class="text-lg md:text-xl font-black mb-4 flex items-center relative z-10 text-amber-300">
-                        ⭐ 视频独家秘籍无损汇总
-                    </h3>
-                    <ul class="space-y-4 text-sm md:text-base text-blue-100 font-light relative z-10">
-                        <li class="flex items-start gap-2.5">
-                            <span class="text-amber-400 font-black">📍</span>
-                            <span><strong>栈桥神级视角：</strong>必须去它西侧的“李恩农公园”拍，红瓦绿树碧海蓝天完美同框！</span>
-                        </li>
-                        <li class="flex items-start gap-2.5">
-                            <span class="text-amber-400 font-black">📍</span>
-                            <span><strong>拒绝红墙人挤人：</strong>直接进大学路旁的“青岛市美术馆”，光影、罗马红墙好拍10倍，清幽无人！</span>
-                        </li>
-                        <li class="flex items-start gap-2.5">
-                            <span class="text-amber-400 font-black">📍</span>
-                            <span><strong>观海山大片：</strong>不要去网红大马路排队，上观海山公园，调到长焦镜头，拍出仙境里的圣弥额尔大教堂！</span>
-                        </li>
-                        <li class="flex items-start gap-2.5">
-                            <span class="text-amber-400 font-black">📍</span>
-                            <span><strong>崂山包车：</strong>一定要包车玩！沿栈道漫步赏落日归山海，累了随时上车直接走，不走回头路！</span>
-                        </li>
-                    </ul>
-                </div>
-
-            </div>
-
-        </div>
-
+    <!-- 💡 自定义浮动通知气泡 (用于复制分享链接成功提示) -->
+    <div id="toast-message" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-sm text-white px-4 py-3 rounded-2xl shadow-xl text-xs z-[9999] opacity-0 pointer-events-none transition-all duration-300 translate-y-2 flex items-center gap-2">
+        <span id="toast-text">链接已复制，快发给朋友吧！</span>
     </div>
 
-    <!-- Leaflet JS CDN -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Real Coordinates for the travel spots in Qingdao
-        const spotsData = {
-            1: [
-                { id: "s1_1", name: "1. 栈桥（看红瓦绿树）", lat: 36.0583, lng: 120.3188, note: "去西侧李恩农公园拍" },
-                { id: "s1_2", name: "2. 海军博物馆", lat: 36.0545, lng: 120.3228, note: "首艘驱逐舰和核潜艇" },
-                { id: "s1_3", name: "3. 小青岛", lat: 36.0514, lng: 120.3204, note: "环岛海风木栈道" },
-                { id: "s1_4", name: "4. 旋转餐厅 (汇泉王朝)", lat: 36.0538, lng: 120.3440, note: "高空俯瞰红瓦绿树" },
-                { id: "s1_5", name: "5. 八大关别墅群", lat: 36.0541, lng: 120.3547, note: "欧式万国老别墅区" },
-                { id: "s1_6", name: "6. 海边木栈道/彼岸咖啡", lat: 36.0515, lng: 120.3620, note: "私藏面朝大海小院" },
-                { id: "s1_7", name: "7. 第三海水浴场灯光秀", lat: 36.0506, lng: 120.3690, note: "夜景观景最好机位" },
-                { id: "s1_8", name: "8. 鸿盛泰脂渣炉包", lat: 36.0673, lng: 120.3750, note: "绝赞脂渣口味炉包" },
-                { id: "s1_9", name: "9. 台东小吃街原浆散啤", lat: 36.0820, lng: 120.3610, note: "一厂新鲜散啤/原浆" }
-            ],
-            2: [
-                { id: "s2_1", name: "1. 金口路古雅老别墅街", lat: 36.0595, lng: 120.3320, note: "极其静谧慢步" },
-                { id: "s2_2", name: "2. 青岛市美术馆", lat: 36.0645, lng: 120.3340, note: "免预约红墙光影" },
-                { id: "s2_3", name: "3. 龙江路漫画街", lat: 36.0632, lng: 120.3315, note: "龙猫漫画墙大片" },
-                { id: "s2_4", name: "4. 德国总督楼旧址", lat: 36.0640, lng: 120.3300, note: "百年前的水晶吊灯" },
-                { id: "s2_5", name: "5. 江苏路基督教堂", lat: 36.0664, lng: 120.3242, note: "绿顶钟楼机械大时钟" },
-                { id: "s2_6", name: "6. 小林媛烤肉火烧", lat: 36.0668, lng: 120.3235, note: "爆汁火烧配全家福馄饨" },
-                { id: "s2_7", name: "7. 望火楼", lat: 36.0646, lng: 120.3182, note: "百年标志德式建筑" },
-                { id: "s2_8", name: "8. 观海山公园", lat: 36.0660, lng: 120.3210, note: "长焦俯拍教堂仙境" },
-                { id: "s2_9", name: "9. 黄岛路里院/大鲍岛", lat: 36.0735, lng: 120.3175, note: "感受原生态市井烟火" },
-                { id: "s2_10", name: "10. 《什么餐馆》晚餐", lat: 36.0750, lng: 120.3150, note: "海肠捞饭/蒜香鲶鱼" }
-            ],
-            3: [
-                { id: "s3_1", name: "1. 石老人日出 (如是书店)", lat: 36.0963, lng: 120.4950, note: "绝美海上红日" },
-                { id: "s3_2", name: "2. 崂山仰口景区", lat: 36.1950, lng: 120.6720, note: "觅天洞俯瞰黄海湾" },
-                { id: "s3_3", name: "3. 地瓜面包子农家餐", lat: 36.1850, lng: 120.6750, note: "山野菜与野生大蛤蜊" },
-                { id: "s3_4", name: "4. 最美环海路沿线", lat: 36.1432, lng: 120.6860, note: "雕龙嘴、青山渔村茶园" },
-                { id: "s3_5", name: "5. 太清宫", lat: 36.1085, lng: 120.6690, note: "2000多年道教名山" },
-                { id: "s3_6", name: "6. 沿木栈道至八水河", lat: 36.1030, lng: 120.6550, note: "感受落日归山海" },
-                { id: "s3_7", name: "7. 埠西市场海鲜加工", lat: 36.0950, lng: 120.4320, note: "现挑海鲜配袋装青啤" }
-            ]
-        };
-
-        let map;
-        let mapMarkers = [];
-        let routePolyline;
-        let currentDay = 1;
-        let checkedSpots = JSON.parse(localStorage.getItem('qingdao_checked_spots_v2') || '{}');
-
-        // Initial setup on Window Load
-        window.onload = function() {
-            initMap();
-            switchDay(1);
-        };
-
-        // Initialize Leaflet Map
-        function initMap() {
-            // Center map on Qingdao
-            map = L.map('map', {
-                center: [36.06, 120.35],
-                zoom: 12,
-                scrollWheelZoom: false // Avoid zooming when scrolling the webpage
-            });
-
-            // Clean Street Map tiles (OpenStreetMap via CartoDB Voyagers)
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; CartoDB &copy; OpenStreetMap',
-                subdomains: 'abcd',
-                maxZoom: 20
-            }).addTo(map);
+        // 行程数据：精选无重叠、纯粹的真实风景缩略图
+        // 15 个地点专属矢量缩略图：准确表达地标特征，避免随机实景图和外链失效。
+        function landmarkThumb(type) {
+            const scenes = {
+                pier: `<path d="M0 62h120v58H0z" fill="#65c9e8"/><path d="M8 86h104" stroke="#fff" stroke-width="3" opacity=".75"/><path d="M16 74h69" stroke="#7a5139" stroke-width="6"/><path d="M68 74V51h35v23" fill="#f2d185" stroke="#263f56" stroke-width="3"/><path d="M63 52l23-17 23 17z" fill="#e75f4f" stroke="#263f56" stroke-width="3"/><path d="M86 35v-9" stroke="#263f56" stroke-width="3"/>`,
+                church: `<path d="M0 78h120v42H0z" fill="#8ed6c2"/><path d="M34 93V39h21v54M65 93V39h21v54" fill="#f6d9a4" stroke="#513f49" stroke-width="3"/><path d="M32 40l13-24 12 24M63 40l13-24 12 24" fill="#e75f4f" stroke="#513f49" stroke-width="3"/><path d="M45 17V8m31 9V8M40 11h10m21 0h10" stroke="#513f49" stroke-width="2"/><path d="M54 60h12v33H54z" fill="#fff4db" stroke="#513f49" stroke-width="3"/>`,
+                signal: `<path d="M0 88Q32 43 60 63t60 25v32H0z" fill="#79bf77"/><circle cx="41" cy="50" r="13" fill="#e76050" stroke="#fff" stroke-width="3"/><circle cx="63" cy="45" r="13" fill="#e76050" stroke="#fff" stroke-width="3"/><circle cx="84" cy="51" r="13" fill="#e76050" stroke="#fff" stroke-width="3"/><path d="M24 88Q60 62 98 88" fill="#f4d190" stroke="#355369" stroke-width="3"/>`,
+                redwall: `<rect x="0" y="0" width="120" height="120" fill="#f7d77e"/><path d="M18 18h84v84H18z" fill="#b9463d"/><path d="M58 18v84" stroke="#f6d8ac" stroke-width="6"/><circle cx="86" cy="33" r="25" fill="#5fa76d"/><path d="M84 40Q68 68 61 102" stroke="#5b493b" stroke-width="6" fill="none"/><path d="M18 102h84" stroke="#fff5df" stroke-width="5"/>`,
+                fishhill: `<path d="M0 85Q43 38 120 76v44H0z" fill="#72b86c"/><path d="M38 79h49v23H38z" fill="#f4d391" stroke="#344c5e" stroke-width="3"/><path d="M30 80l33-25 33 25z" fill="#e85c4e" stroke="#344c5e" stroke-width="3"/><path d="M63 55V42" stroke="#344c5e" stroke-width="3"/><path d="M0 105h120" stroke="#69c9e8" stroke-width="14"/>`,
+                badaguan: `<rect width="120" height="120" fill="#bce8f3"/><path d="M22 102V48h65v54" fill="#f4d8a2" stroke="#3c5060" stroke-width="3"/><path d="M17 49l39-27 39 27z" fill="#d85a4c" stroke="#3c5060" stroke-width="3"/><rect x="38" y="61" width="15" height="18" fill="#8ac6db"/><rect x="62" y="61" width="15" height="18" fill="#8ac6db"/><circle cx="101" cy="48" r="25" fill="#4f9f64"/><path d="M100 55v50" stroke="#694c3a" stroke-width="6"/>`,
+                beach: `<rect width="120" height="120" fill="#8fdcf0"/><path d="M0 71q20-12 40 0t40 0 40 0v49H0z" fill="#48b8de"/><path d="M0 89q30-10 60 0t60 0" stroke="#fff" stroke-width="4" fill="none"/><path d="M0 103h120v17H0z" fill="#f1cf78"/><path d="M63 70V31" stroke="#694b3b" stroke-width="4"/><path d="M29 38q34-25 68 0z" fill="#ff6b61"/><path d="M63 38v32" stroke="#fff" stroke-width="3"/>`,
+                coastpark: `<rect width="120" height="120" fill="#a6e3f2"/><path d="M0 79Q35 54 63 77t57-8v51H0z" fill="#42b6dc"/><path d="M0 54Q27 31 59 53t61-3v31Q85 96 55 78T0 82z" fill="#6ebf75"/><path d="M12 75q36-19 75 4" stroke="#f7e4b0" stroke-width="7" fill="none"/><circle cx="92" cy="31" r="14" fill="#ffd653"/>`,
+                mayfourth: `<rect width="120" height="120" fill="#bceaf4"/><path d="M0 91h120v29H0z" fill="#4bb9dc"/><path d="M59 101C42 86 82 81 56 65 31 50 77 45 56 28c34 12 15 28 36 39 18 10-7 25 8 34z" fill="#e8423d"/><circle cx="91" cy="26" r="14" fill="#ffd653"/>`,
+                sailing: `<rect width="120" height="120" fill="#9fe1f2"/><path d="M0 76q20-10 40 0t40 0 40 0v44H0z" fill="#43b5db"/><path d="M21 91h35l-7 9H27z" fill="#f3ca73"/><path d="M40 40v51" stroke="#334d60" stroke-width="3"/><path d="M42 43l28 34H42z" fill="#fff" stroke="#334d60" stroke-width="2"/><path d="M76 55v38" stroke="#334d60" stroke-width="3"/><path d="M78 58l21 26H78z" fill="#ff6b61"/>`,
+                stoneold: `<rect width="120" height="120" fill="#a5e1f1"/><path d="M0 73q20-9 40 0t40 0 40 0v47H0z" fill="#43b5db"/><path d="M53 86q3-29 14-47 18 8 13 26 13 7 15 21z" fill="#7a766b"/><circle cx="71" cy="49" r="3" fill="#fff"/><path d="M0 102q30-8 60 0t60 0" stroke="#fff" stroke-width="4" fill="none"/>`,
+                sculpture: `<rect width="120" height="120" fill="#daf2ed"/><path d="M0 91h120v29H0z" fill="#69bd72"/><path d="M40 95C22 75 46 62 35 44c26 8 27 26 18 38 19-16 36-31 42-52 8 28-5 53-33 67z" fill="#ff6b61" stroke="#354f60" stroke-width="3"/><circle cx="28" cy="30" r="13" fill="#ffd653"/>`,
+                heartcoast: `<rect width="120" height="120" fill="#a5e2f2"/><path d="M0 76q20-9 40 0t40 0 40 0v44H0z" fill="#45b6dc"/><path d="M14 93q31-34 69-19" stroke="#f5d38b" stroke-width="8" fill="none"/><path d="M80 42c12-17 35 2 14 20L80 76 66 62c-21-18 2-37 14-20z" fill="#ff6b6b"/>`,
+                wheatIsland: `<rect width="120" height="120" fill="#f8d88a"/><circle cx="93" cy="28" r="17" fill="#ff775f"/><path d="M0 76q20-10 40 0t40 0 40 0v44H0z" fill="#4db9dc"/><path d="M12 94q38-44 91 0z" fill="#66b66f"/><path d="M61 88V49" stroke="#684b39" stroke-width="5"/><path d="M60 55q-26 6-25 23 21 0 27-12m0-5q22 2 24 18-18 2-25-8" fill="#397f50"/>`,
+                cliffwalk: `<rect width="120" height="120" fill="#a4e2f2"/><path d="M0 42q35 3 46 32t74 12v34H0z" fill="#46b6dc"/><path d="M0 23q38 10 50 46L29 89 0 78z" fill="#597e61"/><path d="M17 57q33 19 73 24" stroke="#d99b61" stroke-width="7" fill="none"/><path d="M17 52v12m22 2v12m25-4v12m24-6v12" stroke="#6b4936" stroke-width="3"/>`
+            };
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 120 120"><rect width="120" height="120" rx="18" fill="#edf6f8"/>${scenes[type] || scenes.coastpark}</svg>`;
+            return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
         }
 
-        // Switch Days Action
+        const travelData = {
+            1: {
+                summary: "玩转红瓦绿树，经典老城复古慢步 ⛪",
+                transport: "🚶 纯步行为主，极度治愈",
+                food: "🧁【中山路老城美食】中午在老天主教堂旁来一碗「九龙餐厅」的香辣大肠、辣炒蛤蜊。下午茶推荐鱼山路附近的庭院咖啡。傍晚散步结束，可去栈桥旁的百年老字号「春和楼」品尝香酥鸡与大虾烧麦，惬意满分！",
+                pois: [
+                    {
+                        id: 1,
+                        name: "栈桥",
+                        type: "经典地标",
+                        time: "清晨最佳",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "经典必去",
+                        imgUrl: landmarkThumb("pier"),
+                        lat: 36.058354,
+                        lng: 120.319082,
+                        highlight: "青岛百年象征，回澜阁伫立海中。清晨海风温柔，可以慢跑看海鸥低掠、听巨浪拍击长堤，超级出片！",
+                        transportNext: "🚶 步行约 13 分钟 (850米)",
+                        mutter: "吹着海风，漫步栈桥，喂海鸥去啦 🐦"
+                    },
+                    {
+                        id: 2,
+                        name: "圣弥厄尔教堂",
+                        type: "欧式建筑",
+                        time: "10:00 - 11:30",
+                        ticket: "10元",
+                        hasAffiliate: true, // 门票分销标识
+                        duration: "08:30 - 17:00",
+                        badge: "婚纱圣地",
+                        imgUrl: landmarkThumb("church"),
+                        lat: 36.068222,
+                        lng: 120.316828,
+                        highlight: "宏伟的双塔哥特式天主教堂，红瓦黄墙，在碧空下极其瞩目。内部彩绘玻璃和巨大管风琴庄严肃穆，拍照神圣典雅。",
+                        transportNext: "🚶 步行约 22 分钟 (1.4公里)",
+                        mutter: "红瓦黄墙，去庄严宏伟的教堂许个愿 ⛪"
+                    },
+                    {
+                        id: 3,
+                        name: "信号山公园",
+                        type: "登高俯瞰",
+                        time: "13:30 - 15:00",
+                        ticket: "免费",
+                        duration: "06:00 - 20:30",
+                        badge: "全景机位",
+                        imgUrl: landmarkThumb("signal"),
+                        lat: 36.069411,
+                        lng: 120.327572,
+                        highlight: "登上信号山红色圆顶蘑菇亭，360度俯瞰青岛标志性“红瓦绿树、碧海蓝天”，老城德式建筑一览无遗，治愈感拉满。",
+                        transportNext: "🚶 步行约 11 分钟 (700米)",
+                        mutter: "加油爬上山顶，去红色蘑菇亭看红瓦绿树 🍄"
+                    },
+                    {
+                        id: 4,
+                        name: "大学路网红墙",
+                        type: "文艺街区",
+                        time: "15:15 - 16:15",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "人气爆棚",
+                        imgUrl: landmarkThumb("redwall"),
+                        lat: 36.064560,
+                        lng: 120.332304,
+                        highlight: "大学路与鱼山路交汇的红色宫墙，文艺感极强，拐角处的路标极易出大片，是每个小红书女孩来青岛的必修课！",
+                        transportNext: "🚶 步行约 20 分钟 (1.2公里)",
+                        mutter: "在转角的红墙拍张超文艺的明信片照 🧱"
+                    },
+                    {
+                        id: 5,
+                        name: "小鱼山公园",
+                        type: "最美日落",
+                        time: "16:40 - 日落",
+                        ticket: "免费",
+                        duration: "06:00 - 20:30",
+                        badge: "落日晚霞",
+                        imgUrl: landmarkThumb("fishhill"),
+                        lat: 36.059296,
+                        lng: 120.334181,
+                        highlight: "高度刚好的赏景圣地。在览潮阁上俯瞰汇泉湾、第一海水浴场。当晚霞洒在金灿灿的红屋顶与海面上，浪漫至极。",
+                        transportNext: "✨ 完美结束首日行程！",
+                        mutter: "傍晚时分，在览潮阁看夕阳染红海面 🌅"
+                    }
+                ],
+                // 独家变现住宿卡：老城海景房推荐
+                hasHotelAd: true,
+                hotelName: "老城区 · 德式复古花园民宿",
+                hotelDesc: "紧邻大学路，步行可达信号山。绝美德式小洋房，带草坪庭院，清晨拉开窗帘即可看海。",
+                hotelLink: "https://m.ctrip.com"
+            },
+            2: {
+                summary: "海边老别墅与现代科技海岸的奇妙交织 🗼",
+                transport: "🚶 步行 + 地铁 3 号线",
+                food: "🍨【八大关别墅咖啡/万象城】中午推荐在太平角别墅区找一家隐藏的花园院子，来一杯特调咖啡或吃份海景西餐。晚上推荐去五四广场旁的「万象城」商圈，排队尝尝超鲜美的「船歌鱼水饺」（黑色的墨鱼水饺味道惊艳）。",
+                pois: [
+                    {
+                        id: 6,
+                        name: "八大关",
+                        type: "万国博览",
+                        time: "09:00 - 11:30",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "公主城堡",
+                        imgUrl: landmarkThumb("badaguan"),
+                        lat: 36.055811,
+                        lng: 120.354780,
+                        highlight: "这里有二十多个国家风格的欧陆建筑群。林荫大道郁郁葱葱，花石楼、蝴蝶楼散落其间，故事感和异国风情瞬间拉满。",
+                        transportNext: "🚶 步行约 6 分钟 (400米)",
+                        mutter: "漫步在万国博览 of 林荫路上，好像穿越欧洲 🏰"
+                    },
+                    {
+                        id: 7,
+                        name: "第二海水浴场",
+                        type: "浪漫沙滩",
+                        time: "11:30 - 12:30",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "电影感海堤",
+                        imgUrl: landmarkThumb("beach"),
+                        lat: 36.051410,
+                        lng: 120.355104,
+                        highlight: "沙滩细腻，海水清亮。有一段伸入海中的巨大防波堤，非常适合拍摄带有一点孤独感的日式电影画面。",
+                        transportNext: "🚶 步行约 14 分钟 (900米)",
+                        mutter: "在长长的海堤上吹风，拍出孤独感电影画面 🎬"
+                    },
+                    {
+                        id: 8,
+                        name: "太平角公园",
+                        type: "小众秘境",
+                        time: "13:30 - 15:00",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "安逸漫步",
+                        imgUrl: landmarkThumb("coastpark"),
+                        lat: 36.051597,
+                        lng: 120.364491,
+                        highlight: "比八大关更清静。茂密的黑松林、伸入海湾的栈道，微风徐徐。周边错落着各种高颜值咖啡馆，极其治愈。",
+                        transportNext: "🚇 地铁 3 号线 (约 20 分钟)",
+                        mutter: "在安静的黑松林里听松涛，找个院子喝下午茶 ☕"
+                    },
+                    {
+                        id: 9,
+                        name: "五四广场",
+                        type: "城市地标",
+                        time: "15:30 - 17:00",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "红火雕塑",
+                        imgUrl: landmarkThumb("mayfourth"),
+                        lat: 36.061730,
+                        lng: 120.381335,
+                        highlight: "青岛现代都会标志。鲜红高耸的“五月的风”雕塑矗立在蔚蓝海岸线，身后是霸气的高楼大厦，极具都市张力。",
+                        transportNext: "🚶 步行约 13 分钟 (850米)",
+                        mutter: "打卡壮观的“五月的风”雕塑，城市心脏亮起来啦 🏙️"
+                    },
+                    {
+                        id: 10,
+                        name: "奥帆中心",
+                        type: "绝美夜景",
+                        time: "17:30 - 20:30",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "绝美夜景",
+                        imgUrl: landmarkThumb("sailing"),
+                        lat: 36.056770,
+                        lng: 120.392900,
+                        highlight: "泊满纯白桅杆帆船的良港。入夜时，五四广场至奥帆海岸整排高楼群亮起梦幻的城市浮光秀，璀璨夺目。",
+                        transportNext: "✨ 今日圆满收官！",
+                        mutter: "看万千灯火璀璨，纯白游艇停满良港，太霸气了 ⛵"
+                    }
+                ],
+                // 独家变现住宿卡：五四广场/奥帆海景房
+                hasHotelAd: true,
+                hotelName: "五四广场 · 高空180°海景美宿",
+                hotelDesc: "窗外即是奥帆中心与五月的风红雕塑。躺在浴缸里即可无死角看夜景灯光秀，美轮美奂。",
+                hotelLink: "https://m.ctrip.com"
+            },
+            3: {
+                summary: "极地黄金海岸线，网红离岛与日落木栈道 🌾",
+                transport: "🚕 的士 / 滴滴出行",
+                food: "🍺【小麦岛/极地海鲜】中午推荐在极地海洋世界附近品尝地道海鲜大排档，来一扎正宗的「青岛原浆啤酒」和一盘多汁的「鲅鱼水饺」；傍晚可在燕儿岛悬崖下吹着风，去精致海景音乐清吧听歌微醺。",
+                pois: [
+                    {
+                        id: 11,
+                        name: "石老人海水浴场",
+                        type: "辽阔海岸",
+                        time: "朝阳日出最佳",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "黄金细沙",
+                        imgUrl: landmarkThumb("stoneold"),
+                        lat: 36.096730,
+                        lng: 120.472710,
+                        highlight: "沙质极好，海岸开阔。清晨能够望见海里形似老人端坐的礁石。适合迎着海风，脱掉鞋子，享受纯粹的踏浪快乐。",
+                        transportNext: "🚕 打车约 6 分钟 (2.5公里)",
+                        mutter: "光脚走在黄金细沙上，去看看遥远的海上石老人 🌊"
+                    },
+                    {
+                        id: 12,
+                        name: "青岛雕塑园",
+                        type: "海边艺术",
+                        time: "10:45 - 12:00",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "草地与海",
+                        imgUrl: landmarkThumb("sculpture"),
+                        lat: 36.088650,
+                        lng: 120.457810,
+                        highlight: "大片的松树林、辽阔草坪与波光粼粼的大海无缝衔接，各种现代雕塑错落其间。人少景美，格外惬意放松。",
+                        transportNext: "🚕 打车约 17 分钟 (6.5公里)",
+                        mutter: "海边艺术走廊，大片草坪和波光粼粼的海面真疗愈 🎨"
+                    },
+                    {
+                        id: 13,
+                        name: "海之恋公园",
+                        type: "法式浪漫",
+                        time: "13:30 - 14:45",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "小众浪漫",
+                        imgUrl: landmarkThumb("heartcoast"),
+                        lat: 36.069410,
+                        lng: 120.439100,
+                        highlight: "新晋的小众治愈圣地。一望无际的绿草坡、矗立海边的白色大风车、以及孤独的小树，像极了新海诚的动漫场景。",
+                        transportNext: "🚶 步行约 14 分钟 (900米)",
+                        mutter: "绿草坡上的大风车 and 孤独的小树，新海诚风拉满 🎡"
+                    },
+                    {
+                        id: 14,
+                        name: "小麦岛公园",
+                        type: "网红必去",
+                        time: "15:00 - 17:30",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "爱乐之城",
+                        imgUrl: landmarkThumb("wheatIsland"),
+                        lat: 36.059880,
+                        lng: 120.433290,
+                        highlight: "360度环岛大片翠绿草坡。拥有大片翠绿草坡和碎石小径，落日时分，常有民谣歌手弹唱，伴着海浪吉他声，浪漫指数突破天际！",
+                        transportNext: "🚕 打车约 21 分钟 (8公里)",
+                        mutter: "坐在翠绿的小山坡上，听海风、听民谣弹唱 🎵"
+                    },
+                    {
+                        id: 15,
+                        name: "燕儿岛公园",
+                        type: "断崖晚霞",
+                        time: "18:00 - 日落后",
+                        ticket: "免费",
+                        duration: "全天开放",
+                        badge: "落日木栈道",
+                        imgUrl: landmarkThumb("cliffwalk"),
+                        lat: 36.054360,
+                        lng: 120.407980,
+                        highlight: "依断崖而建的绝美木质栈道。惊涛拍岸，暮色降临时栈道暖黄色的路灯一盏盏亮起，与幽蓝色的大海形成冷暖对比，美到失语。",
+                        transportNext: "✨ 温馨归程，带回满怀爱与回忆",
+                        mutter: "在悬崖栈道看晚霞慢慢褪去，灯光亮起，美哭 🌉"
+                    }
+                ]
+            }
+        };
+
+        // 从 LocalStorage 加载打卡记录
+        let checkedPois = JSON.parse(localStorage.getItem('qingdao_checked_pois') || '{}');
+        let currentDay = 1;
+        let map;
+        let markers = [];
+        let polyline = null;
+        let currentMobileView = 'list'; // 'list' or 'map'
+
+        // 引入动态行走小人专用的自定义Overlay类和动画参数
+        let walkerOverlay = null;
+        let walkerPath = [];
+        let currentPathIndex = 0;
+        let interpolationStep = 0;
+        let animationFrameId = null;
+
+        // 临时变量用于记录当前的推广跳转目标（用于Modal统一呼起）
+        let activeAffiliateTarget = "https://m.ctrip.com";
+
+        function setupCustomOverlay() {
+            if (typeof qq === 'undefined' || !qq.maps || !qq.maps.Overlay) return;
+
+            // 声明 CuteWalkerOverlay 类
+            window.CuteWalkerOverlay = function(position, map) {
+                this.position = position;
+                this.mutterText = "出发啦~ 🌊";
+                this.setMap(map);
+            };
+
+            CuteWalkerOverlay.prototype = new qq.maps.Overlay();
+
+            CuteWalkerOverlay.prototype.construct = function() {
+                var div = this.div = document.createElement('div');
+                div.style.position = 'absolute';
+                div.style.zIndex = '9999';
+                div.style.pointerEvents = 'none'; // 避免阻挡地图手势
+
+                // 渲染小红书手账插画风的动态小人与气泡
+                div.innerHTML = `
+                    <div class="relative flex flex-col items-center select-none" style="transform: translate(-50%, -100%);">
+                        <!-- 动态气泡 -->
+                        <div class="bg-rose-500 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-lg border border-white/20 whitespace-nowrap mb-1 transition-all duration-300 relative animate-bounce">
+                            <span id="walker-mutter-box">出发啦~ 🌊</span>
+                            <!-- 气泡下角箭头 -->
+                            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[3px] w-1.5 h-1.5 bg-rose-500 rotate-45"></div>
+                        </div>
+                        <!-- 动态小人 (小红书风戴帽旅行小女孩 🚶‍♀️) -->
+                        <div class="text-3xl filter drop-shadow-md animate-sway">
+                            🚶‍♀️
+                        </div>
+                    </div>
+                `;
+
+                this.getPanes().overlayMouseTarget.appendChild(div);
+            };
+
+            CuteWalkerOverlay.prototype.draw = function() {
+                var overlayProjection = this.getProjection();
+                // 核心修复点：若地图投影算法尚未就绪，直接安全退出，避免报错
+                if (!overlayProjection) return;
+
+                var pixel = overlayProjection.fromLatLngToDivPixel(this.position);
+                var div = this.div;
+                if (div) {
+                    div.style.left = pixel.x + 'px';
+                    div.style.top = pixel.y + 'px';
+                }
+            };
+
+            CuteWalkerOverlay.prototype.destroy = function() {
+                if (this.div && this.div.parentNode) {
+                    this.div.parentNode.removeChild(this.div);
+                }
+            };
+
+            CuteWalkerOverlay.prototype.setPosition = function(position) {
+                this.position = position;
+                this.draw();
+            };
+
+            CuteWalkerOverlay.prototype.setMutter = function(text) {
+                this.mutterText = text;
+                var box = document.getElementById('walker-mutter-box');
+                if (box) {
+                    box.innerText = text;
+                }
+            };
+        }
+
+        // 启动平滑的直线漫步动画
+        function startWalkingAnimation(pois) {
+            // 停止当前存在的动画
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+
+            // 清除旧的 Overlay
+            if (walkerOverlay) {
+                walkerOverlay.setMap(null);
+                walkerOverlay = null;
+            }
+
+            if (!pois || pois.length < 2 || !map) return;
+
+            // 构建直线路径点的数组
+            const path = pois.map(p => new qq.maps.LatLng(p.lat, p.lng));
+            currentPathIndex = 0;
+            interpolationStep = 0;
+
+            // 创建小人 Overlay，从起点出发
+            walkerOverlay = new CuteWalkerOverlay(path[0], map);
+            walkerOverlay.setMutter("沿着绝美漫游路线出发啦！🎒");
+
+            function interpolate(p1, p2, fraction) {
+                var lat = p1.getLat() + (p2.getLat() - p1.getLat()) * fraction;
+                var lng = p1.getLng() + (p2.getLng() - p1.getLng()) * fraction;
+                return new qq.maps.LatLng(lat, lng);
+            }
+
+            // 行走循环
+            function tick() {
+                if (!walkerOverlay || !map) return;
+
+                // 运动速度（由于直线节点较少，步长系数保持相对小，动作会很平滑丝滑）
+                interpolationStep += 0.006;
+
+                if (interpolationStep >= 1) {
+                    interpolationStep = 0;
+                    currentPathIndex = (currentPathIndex + 1) % (path.length - 1);
+                }
+
+                var p1 = path[currentPathIndex];
+                var p2 = path[currentPathIndex + 1];
+                var currentPos = interpolate(p1, p2, interpolationStep);
+
+                walkerOverlay.setPosition(currentPos);
+
+                // 根据当前行进的直线段落，动态更新小人的内心碎碎念
+                const nextPoi = pois[currentPathIndex + 1];
+                if (nextPoi) {
+                    if (interpolationStep < 0.45) {
+                        walkerOverlay.setMutter(`正在前往: ${nextPoi.name} 👣`);
+                    } else {
+                        walkerOverlay.setMutter(nextPoi.mutter || "吹吹海风，看看风景...");
+                    }
+                }
+
+                animationFrameId = requestAnimationFrame(tick);
+            }
+
+            // 启动定时帧
+            animationFrameId = requestAnimationFrame(tick);
+        }
+
+        // 手机端视图转换
+        function switchMobileView(view) {
+            currentMobileView = view;
+            const listEl = document.getElementById('left-list-container');
+            const mapEl = document.getElementById('right-map-container');
+            const btnList = document.getElementById('m-btn-list');
+            const btnMap = document.getElementById('m-btn-map');
+
+            if (view === 'list') {
+                listEl.classList.remove('hidden');
+                mapEl.classList.add('hidden');
+                btnList.classList.add('bg-white', 'text-[#635bff]', 'shadow-sm');
+                btnList.classList.remove('text-slate-600');
+                btnMap.classList.remove('bg-white', 'text-[#635bff]', 'shadow-sm');
+                btnMap.classList.add('text-slate-600');
+            } else {
+                listEl.classList.add('hidden');
+                mapEl.classList.remove('hidden');
+                mapEl.classList.add('block');
+                btnMap.classList.add('bg-white', 'text-[#635bff]', 'shadow-sm');
+                btnMap.classList.remove('text-slate-600');
+                btnList.classList.remove('bg-white', 'text-[#635bff]', 'shadow-sm');
+                btnList.classList.add('text-slate-600');
+
+                setTimeout(() => {
+                    if (map) {
+                        resetMapView();
+                    }
+                }, 200);
+            }
+        }
+
+        // 切换景点打卡状态
+        function toggleCheckPoi(id, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+
+            if (checkedPois[id]) {
+                delete checkedPois[id];
+            } else {
+                checkedPois[id] = true;
+            }
+
+            // 同步至本地存储
+            localStorage.setItem('qingdao_checked_pois', JSON.stringify(checkedPois));
+
+            // 重新渲染当前页
+            renderDay(currentDay);
+        }
+
+        // 初始化腾讯地图
+        function initMap() {
+            try {
+                setupCustomOverlay(); // 注册我们的 CuteWalkerOverlay 覆盖物
+
+                const defaultCenter = new qq.maps.LatLng(36.068222, 120.316828);
+
+                map = new qq.maps.Map(document.getElementById('map-container'), {
+                    center: defaultCenter,
+                    zoom: 13,
+                    mapTypeControl: false,
+                    zoomControl: true,
+                    zoomControlOptions: {
+                        position: qq.maps.ControlPosition.RIGHT_BOTTOM
+                    }
+                });
+
+                renderDay(1);
+            } catch (error) {
+                console.error("地图加载发生异常: ", error);
+            }
+        }
+
+        // 切换日程天数
         function switchDay(dayNum) {
+            if (currentDay === dayNum) return;
             currentDay = dayNum;
-            
-            // Toggle Tab buttons style
-            for (let i = 1; i <= 3; i++) {
-                const btn = document.getElementById(`btn-day-${i}`);
-                if (i === dayNum) {
-                    btn.className = "day-active py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center min-h-[80px]";
-                } else {
-                    btn.className = "day-inactive py-5 px-3 rounded-2xl font-black transition-all duration-300 flex flex-col items-center justify-center border border-blue-100 min-h-[80px]";
+
+            document.querySelectorAll('.day-tab').forEach(tab => {
+                tab.classList.remove('bg-white', 'text-[#635bff]', 'shadow-sm');
+                tab.classList.add('text-slate-500', 'hover:text-slate-800');
+            });
+
+            const activeTab = document.getElementById(`tab-day${dayNum}`);
+            const prefix = dayNum === 1 ? '🍓 DAY 1' : dayNum === 2 ? '🥝 DAY 2' : '🍊 DAY 3';
+            const suffix = dayNum === 1 ? '老城漫步' : dayNum === 2 ? '经典地标' : '休闲慢游';
+
+            activeTab.innerHTML = `${prefix} <span class="hidden sm:inline">| ${suffix}</span>`;
+            activeTab.className = "day-tab flex-1 py-3 text-center rounded-xl font-bold text-sm transition-all duration-300 shadow-sm bg-white text-[#635bff]";
+
+            renderDay(dayNum);
+        }
+
+        // 计算并更新打卡进度条
+        function updateProgress(pois) {
+            const total = pois.length;
+            let checkedCount = 0;
+            pois.forEach(p => {
+                if (checkedPois[p.id]) checkedCount++;
+            });
+
+            document.getElementById('checked-progress-text').innerText = `${checkedCount}/${total}`;
+            const percentage = total > 0 ? (checkedCount / total) * 100 : 0;
+            document.getElementById('checked-progress-bar').style.width = `${percentage}%`;
+        }
+
+        // 渲染核心行程卡片 (带优雅的CPS及原生门票标签)
+        function renderDay(dayNum) {
+            const data = travelData[dayNum];
+
+            document.getElementById('day-route-summary').innerText = `玩法：${data.summary}`;
+            document.getElementById('day-transport').innerText = data.transport;
+            document.getElementById('food-detail-text').innerText = data.food;
+            updateProgress(data.pois);
+
+            const poisContainer = document.getElementById('pois-container');
+            poisContainer.innerHTML = '';
+
+            data.pois.forEach((poi, index) => {
+                const isChecked = !!checkedPois[poi.id];
+                const card = document.createElement('div');
+                card.id = `poi-card-${poi.id}`;
+
+                // 设置打卡状态类
+                const completedClass = isChecked ? 'completed-card' : '';
+
+                card.className = `stripe-card ${completedClass} rounded-2xl p-4 cursor-pointer flex flex-col gap-3 relative overflow-hidden`;
+                card.onclick = () => focusPoi(poi.id, poi.lat, poi.lng, true);
+
+                card.innerHTML = `
+                    <div class="flex gap-3 md:gap-4 items-center relative z-10">
+
+                        <!-- 极简复选框打卡 -->
+                        <button onclick="toggleCheckPoi(${poi.id}, event)"
+                                class="w-6 h-6 rounded-full border-2 ${isChecked ? 'bg-[#635bff] border-[#635bff] text-white' : 'border-slate-300 hover:border-[#635bff]'} flex items-center justify-center transition-all shrink-0"
+                                title="${isChecked ? '取消打卡' : '标记打卡'}">
+                            ${isChecked ? '<i data-lucide-name="check" class="w-3.5 h-3.5"></i>' : ''}
+                        </button>
+
+                        <!-- 高清实景微缩略图 -->
+                        <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-slate-100 flex-shrink-0 relative overflow-hidden border border-slate-200 shadow-sm">
+                            <img src="${poi.imgUrl}"
+                                 alt="${poi.name}"
+                                 class="w-full h-full object-cover"
+                                 onerror="this.src='https://placehold.co/160x160/e2e8f0/64748b?text=Qingdao';" />
+                            <!-- 序号 -->
+                            <div class="absolute top-1 left-1 bg-slate-900/60 backdrop-blur-sm text-white w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold">
+                                ${index + 1}
+                            </div>
+                        </div>
+
+                        <!-- 景点核心文案 -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-1.5">
+                                <h3 class="font-bold text-slate-800 text-sm md:text-base flex items-center gap-1.5 truncate ${isChecked ? 'line-through text-slate-400' : ''}">
+                                    ${poi.name}
+                                    <span class="text-[9px] font-normal px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 shrink-0">${poi.type}</span>
+                                </h3>
+
+                                ${isChecked ? `
+                                <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
+                                    ✓ 已达成
+                                </span>
+                                ` : `
+                                <span class="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md shrink-0">
+                                    ${poi.badge}
+                                </span>
+                                `}
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-400 text-[10px] md:text-xs mt-1">
+                                <span class="flex items-center gap-1"><i data-lucide-name="clock" class="w-3 h-3 text-slate-400"></i> ${poi.time}</span>
+
+                                <!-- 门票，如果包含分销福利，则追加点击浮层 -->
+                                <span class="flex items-center gap-0.5">
+                                    <i data-lucide-name="ticket" class="w-3 h-3 text-slate-400"></i>
+                                    <span>门票: ${poi.ticket}</span>
+                                    ${poi.hasAffiliate ? `
+                                    <span onclick="triggerAffiliateModal(event, '${poi.name}', '特惠票通道', 'https://m.ctrip.com')" class="ml-1 cursor-pointer text-[9px] bg-amber-100 hover:bg-amber-200 text-amber-700 font-extrabold px-1.5 py-0.5 rounded flex items-center gap-0.5 shadow-sm">
+                                        🎟️ 特惠省时通道
+                                    </span>
+                                    ` : ''}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 点评亮点 -->
+                    <p class="text-xs text-slate-500 leading-relaxed font-light bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
+                        ${poi.highlight}
+                    </p>
+
+                    <!-- 衔接行程纸胶带 -->
+                    ${index < data.pois.length - 1 ? `
+                    <div class="mt-1 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                        <span class="flex items-center gap-1">
+                            <i data-lucide-name="milestone" class="w-3 h-3 text-[#635bff]"></i> 下一步连线：
+                        </span>
+                        <span class="text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-medium">
+                            ${poi.transportNext}
+                        </span>
+                    </div>
+                    ` : ''}
+                `;
+
+                poisContainer.appendChild(card);
+            });
+
+            // 如果该 Day 包含高溢价的推荐住宿卡片，插入在最下方
+            if (data.hasHotelAd) {
+                const hotelCard = document.createElement('div');
+                hotelCard.className = "tape-style border border-amber-200/50 rounded-2xl p-4 shadow-sm flex flex-col gap-2 relative mt-4 cursor-pointer hover:shadow-md transition active:scale-95";
+                hotelCard.onclick = (event) => triggerAffiliateModal(event, data.hotelName, '美团/携程特享折扣房', data.hotelLink);
+                hotelCard.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-amber-900 flex items-center gap-1">
+                            🏨 住宿推荐 · 顺路不折返
+                        </span>
+                        <span class="text-[9px] bg-rose-500 text-white font-extrabold px-1.5 py-0.5 rounded animate-pulse">
+                            专属折扣券
+                        </span>
+                    </div>
+                    <p class="text-xs font-extrabold text-slate-800">${data.hotelName}</p>
+                    <p class="text-[11px] text-slate-500 leading-normal">${data.hotelDesc}</p>
+                    <div class="flex items-center justify-between text-[10px] text-amber-900 font-bold border-t border-amber-200/40 pt-2 mt-1">
+                        <span>预订暗号【青岛手账】立享特惠价</span>
+                        <span class="text-[#635bff] flex items-center gap-0.5">去看看房态 <i data-lucide-name="chevron-right" class="w-3 h-3"></i></span>
+                    </div>
+                `;
+                poisContainer.appendChild(hotelCard);
+            }
+
+            initLucide();
+            drawMapPoints(data.pois);
+        }
+
+        function drawMapPoints(pois) {
+            if (!map) return;
+
+            // 清除旧 markers
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+
+            // 清除旧 Polyline
+            if (polyline) {
+                polyline.setMap(null);
+                polyline = null;
+            }
+
+            // 停止当前所有动画帧和小人 Overlay
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            if (walkerOverlay) {
+                walkerOverlay.setMap(null);
+                walkerOverlay = null;
+            }
+
+            pois.forEach((poi, index) => {
+                const position = new qq.maps.LatLng(poi.lat, poi.lng);
+                const marker = new qq.maps.Marker({
+                    position: position,
+                    map: map,
+                    icon: createNumberedMarkerIcon(index + 1, false),
+                    title: poi.name
+                });
+
+                marker.poiId = poi.id;
+                marker.poiIndex = index + 1;
+
+                qq.maps.event.addListener(marker, 'click', function() {
+                    focusPoi(poi.id, poi.lat, poi.lng, false);
+                });
+
+                markers.push(marker);
+            });
+
+            // 绘制利落、稳定的直线路径
+            const path = pois.map(p => new qq.maps.LatLng(p.lat, p.lng));
+            polyline = new qq.maps.Polyline({
+                map: map,
+                path: path,
+                strokeColor: '#3a86ff',
+                strokeWeight: 5,
+                strokeOpacity: 0.85
+            });
+
+            resetMapView();
+
+            // 启动稳定的直线漫步动画
+            startWalkingAnimation(pois);
+        }
+
+        // 生成内嵌 SVG 序号地图标记：不依赖腾讯示例图片，顺序一眼可见。
+        function createNumberedMarkerIcon(number, active = false) {
+            const fill = active ? '#ff5f57' : '#635bff';
+            const stroke = active ? '#fff1ef' : '#ffffff';
+            const width = active ? 42 : 34;
+            const height = active ? 50 : 42;
+            const anchorX = Math.round(width / 2);
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 42 50">
+                    <path d="M21 1.5C10.2 1.5 2 9.7 2 20.1c0 13.7 19 28.2 19 28.2s19-14.5 19-28.2C40 9.7 31.8 1.5 21 1.5Z" fill="${fill}" stroke="${stroke}" stroke-width="3"/>
+                    <circle cx="21" cy="20" r="11" fill="white" fill-opacity=".98"/>
+                    <text x="21" y="24" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="${fill}">${number}</text>
+                </svg>`;
+            const url = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+            return new qq.maps.MarkerImage(
+                url,
+                new qq.maps.Size(width, height),
+                new qq.maps.Point(0, 0),
+                new qq.maps.Point(anchorX, height),
+                new qq.maps.Size(width, height)
+            );
+        }
+
+        // 聚焦某一 POI 并定位地图
+        function focusPoi(id, lat, lng, isFromCardClick = true) {
+            if (!map) return;
+
+            document.querySelectorAll('.stripe-card').forEach(card => {
+                card.classList.remove('border-[#635bff]', 'ring-2', 'ring-blue-100');
+            });
+            const selectedCard = document.getElementById(`poi-card-${id}`);
+            if (selectedCard) {
+                selectedCard.classList.add('border-[#635bff]', 'ring-2', 'ring-blue-100');
+                if (isFromCardClick) {
+                    selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }
 
-            // Show current Day Timeline HTML panel
-            document.querySelectorAll('.day-panel').forEach(panel => panel.classList.add('hidden'));
-            document.getElementById(`day-${dayNum}-content`).classList.remove('hidden');
+            if (isFromCardClick && window.innerWidth < 768 && currentMobileView === 'list') {
+                switchMobileView('map');
+            }
 
-            // Render Checklist
-            renderChecklist();
+            markers.forEach(marker => {
+                if (marker.poiId === id) {
+                    marker.setIcon(createNumberedMarkerIcon(marker.poiIndex, true));
+                    marker.setZIndex(1000);
+                } else {
+                    marker.setIcon(createNumberedMarkerIcon(marker.poiIndex, false));
+                    marker.setZIndex(100);
+                }
+            });
 
-            // Refresh Map Markers and route path line
-            updateMapRoute(dayNum);
+            map.panTo(new qq.maps.LatLng(lat, lng));
+            map.setZoom(15);
         }
 
-        // Update Map Layers
-        function updateMapRoute(dayNum) {
+        function resetMapView() {
             if (!map) return;
-
-            // Clear previous layers
-            mapMarkers.forEach(marker => map.removeLayer(marker));
-            mapMarkers = [];
-            if (routePolyline) {
-                map.removeLayer(routePolyline);
-            }
-
-            const currentSpots = spotsData[dayNum];
-            const coordinates = [];
-
-            currentSpots.forEach((spot, index) => {
-                const latLng = [spot.lat, spot.lng];
-                coordinates.push(latLng);
-
-                // Create custom circular numerical marker
-                const customIcon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div>${index + 1}</div>`,
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14]
-                });
-
-                // Marker and popup
-                const marker = L.marker(latLng, { icon: customIcon })
-                    .bindPopup(`<div class="font-bold text-slate-800 text-sm">${spot.name}</div><div class="text-xs text-slate-500 mt-0.5">${spot.note}</div>`)
-                    .addTo(map);
-
-                mapMarkers.push(marker);
+            const data = travelData[currentDay];
+            const bounds = new qq.maps.LatLngBounds();
+            data.pois.forEach(poi => {
+                bounds.extend(new qq.maps.LatLng(poi.lat, poi.lng));
             });
+            map.fitBounds(bounds);
+        }
 
-            // Draw route line
-            routePolyline = L.polyline(coordinates, {
-                color: dayNum === 1 ? '#2563eb' : (dayNum === 2 ? '#4f46e5' : '#10b981'),
-                weight: 4,
-                opacity: 0.7,
-                dashArray: '5, 8'
-            }).addTo(map);
+        // 呼起原生变现/推荐Modal
+        function triggerAffiliateModal(event, name, typeText, targetUrl) {
+            if (event) event.stopPropagation(); // 阻止卡片聚焦
 
-            // Automatically focus and fit bounds of the day's spots
-            if (coordinates.length > 0) {
-                map.fitBounds(routePolyline.getBounds(), {
-                    padding: [40, 40]
-                });
+            activeAffiliateTarget = targetUrl;
+            document.getElementById('ad-modal-title').innerText = name;
+            document.getElementById('ad-modal-promo').innerText = `🎁 专享分销特惠暗号【青岛漫游】`;
+            document.getElementById('ad-modal-desc').innerText = `已为您对接官方优惠专属卡槽。通过本页面点击跳转订购，可享受 ${typeText} 独家直降福利，省钱又省心！`;
+
+            const modal = document.getElementById('ad-benefit-modal');
+            modal.classList.remove('hidden');
+        }
+
+        // 呼起本地百宝箱推荐Modal
+        function openPartner(type, name, promo) {
+            activeAffiliateTarget = "https://m.ctrip.com"; // 后期可替换成你跟老板谈好的特定推广卡片/微信号
+            document.getElementById('ad-modal-icon').innerText = type === '旅拍' ? '📸' : type === '包车' ? '🚗' : '🍺';
+            document.getElementById('ad-modal-title').innerText = `${type}特惠 · ${name}`;
+            document.getElementById('ad-modal-promo').innerText = `🔥 专属福利：${promo}`;
+            document.getElementById('ad-modal-desc').innerText = `已为您核验该商家资质。出示此网页界面，即可直接享受【独家专属特价/赠品】。客服微信已备好，一键即可咨询预订！`;
+
+            document.getElementById('ad-benefit-modal').classList.remove('hidden');
+        }
+
+        function closeBenefitModal() {
+            document.getElementById('ad-benefit-modal').classList.add('hidden');
+        }
+
+        // 模拟跳转到携程/美团/微信分销接口
+        function performAffiliateRedirect() {
+            window.open(activeAffiliateTarget, '_blank');
+            closeBenefitModal();
+        }
+
+        // 一键裂变复制分享链接（iframe安全降级）
+        function copyShareLink() {
+            const tempInput = document.createElement('input');
+            tempInput.value = window.location.href;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            // 显示Toast提示
+            const toast = document.getElementById('toast-message');
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+            }, 2500);
+        }
+
+        function initLucide() {
+            try {
+                if (typeof lucide !== 'undefined') {
+                    // 兼容原有 data-lucide-name 写法，并统一交给 Lucide 官方渲染器。
+                    document.querySelectorAll('[data-lucide-name]').forEach(el => {
+                        const iconName = el.getAttribute('data-lucide-name');
+                        el.setAttribute('data-lucide', iconName);
+                    });
+                    lucide.createIcons();
+                }
+            } catch (e) {
+                console.error("Lucide failed to load: ", e);
             }
         }
 
-        // Render checklist UI
-        function renderChecklist() {
-            const listContainer = document.getElementById('checklist-items');
-            listContainer.innerHTML = '';
-            
-            const currentSpots = spotsData[currentDay];
-            
-            currentSpots.forEach(spot => {
-                const isChecked = checkedSpots[spot.id] ? 'checked' : '';
-                
-                const itemDiv = document.createElement('div');
-                itemDiv.className = `flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${isChecked ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-100 hover:border-blue-200'}`;
-                
-                itemDiv.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" id="${spot.id}" ${isChecked} onchange="toggleSpot('${spot.id}')" 
-                               class="w-6 h-6 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer">
-                        <label for="${spot.id}" class="text-base font-bold text-slate-800 cursor-pointer ${isChecked ? 'line-through text-slate-400 font-medium' : ''}">
-                            ${spot.name}
-                        </label>
-                    </div>
-                    <span class="text-xs font-medium bg-slate-200/70 text-slate-600 px-2.5 py-1 rounded-full text-right shrink-0">${spot.note}</span>
-                `;
-                listContainer.appendChild(itemDiv);
-            });
-
-            calculateProgress();
-        }
-
-        // Toggle checkbox
-        function toggleSpot(spotId) {
-            checkedSpots[spotId] = !checkedSpots[spotId];
-            if (!checkedSpots[spotId]) {
-                delete checkedSpots[spotId];
-            }
-            
-            // Save state to localstorage
-            localStorage.setItem('qingdao_checked_spots_v2', JSON.stringify(checkedSpots));
-            
-            // Re-render
-            renderChecklist();
-        }
-
-        // Calculate progress percentage
-        function calculateProgress() {
-            const currentSpots = spotsData[currentDay];
-            let checkedCount = 0;
-            
-            currentSpots.forEach(spot => {
-                if (checkedSpots[spot.id]) checkedCount++;
-            });
-
-            const percent = Math.round((checkedCount / currentSpots.length) * 100);
-            
-            const progressSpan = document.getElementById('checklist-progress');
-            progressSpan.textContent = `${percent}% 已打卡`;
-            if (percent === 100) {
-                progressSpan.className = "text-sm text-white bg-emerald-600 px-3.5 py-1 rounded-full font-black animate-bounce shadow-md";
-            } else {
-                progressSpan.className = "text-sm text-blue-700 bg-blue-50 px-3 py-1 rounded-full font-black";
-            }
-        }
+        window.onload = function() {
+            setTimeout(initMap, 200);
+            initLucide();
+        };
     </script>
 </body>
 </html>
